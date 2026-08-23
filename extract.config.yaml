@@ -5,6 +5,7 @@
 projectDir: packages/werkstatt-knowledge
 destName: werkstatt-knowledge
 standalone: true
+versionBump: patch
 
 workspacePrefixes:
   - "@warpgogol/"
