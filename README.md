@@ -1,5 +1,7 @@
 # @warpgogol/werkstatt-knowledge
 
+[Українська](README.uk.md) | English
+
 Werkstatt plugin for evidence-backed knowledge systems. Implements `werkstatt/plugin@1` with `profileId: "knowledge-typescript-turborepo"`.
 
 ## What this plugin does
@@ -54,11 +56,11 @@ The plugin registers 5 kernel modules with 23 command stubs:
 
 ## Path conventions
 
-| Path | Value |
-| --- | --- |
-| Content directory | `knowledge` |
-| Distribution directory | `.generated/knowledge/dist` |
-| Entry points | `knowledge/manifest.yaml`, `knowledge/ontology/schema-registry.yaml` |
+| Path                   | Value                                                                |
+| ---------------------- | -------------------------------------------------------------------- |
+| Content directory      | `knowledge`                                                          |
+| Distribution directory | `.generated/knowledge/dist`                                          |
+| Entry points           | `knowledge/manifest.yaml`, `knowledge/ontology/schema-registry.yaml` |
 
 ## Invariants
 
