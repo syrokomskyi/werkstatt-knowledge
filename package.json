@@ -1,6 +1,6 @@
 {
   "name": "@warpgogol/werkstatt-knowledge",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "private": false,
   "type": "module",
   "engines": {
@@ -69,7 +69,7 @@
   "dependencies": {
     "@warpgogol/forge": "^2.9.1",
     "@warpgogol/werkstatt-engine": "*",
-    "@warpgogol/werkstatt-shared": "*"
+    "@warpgogol/werkstatt-shared": "^0.11.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
