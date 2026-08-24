@@ -69,7 +69,7 @@
   "dependencies": {
     "@warpgogol/forge": "^2.9.1",
     "@warpgogol/werkstatt-engine": "*",
-    "@warpgogol/werkstatt-shared": "^0.11.0"
+    "@warpgogol/werkstatt-shared": "*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
