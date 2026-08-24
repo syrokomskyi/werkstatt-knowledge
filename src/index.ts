@@ -20,7 +20,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { WerkstattPlugin } from "@warpgogol/werkstatt-engine/plugin";
+import type { WerkstattPlugin } from "@warpgogol/werkstatt-shared/plugin";
 import { knowledgePathConventions } from "./paths/knowledge-paths.ts";
 import { KNOWLEDGE_INVARIANTS } from "./invariants/knowledge-invariants.ts";
 import { runKnowledgeMaterializeHook } from "./hooks/materialize.ts";

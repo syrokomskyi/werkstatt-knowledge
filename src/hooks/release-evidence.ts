@@ -16,7 +16,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-engine/plugin";
+import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-shared/plugin";
 import { runReleaseEvidence } from "../release/evidence.ts";
 
 export async function runKnowledgeReleaseEvidenceHook(ctx: PluginHookContext): Promise<HookResult> {

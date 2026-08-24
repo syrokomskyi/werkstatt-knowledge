@@ -21,7 +21,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { writeFileIfChanged } from "@warpgogol/werkstatt-engine/kernel";
-import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-engine/plugin";
+import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-shared/plugin";
 
 const MANIFEST_YAML = `# Knowledge manifest — canonical dataset identity
 id: ""
