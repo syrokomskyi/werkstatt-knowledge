@@ -1,6 +1,6 @@
 {
   "name": "@warpgogol/werkstatt-knowledge",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": false,
   "type": "module",
   "engines": {
@@ -51,7 +51,9 @@
       "default": "./src/hooks/index.ts"
     }
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "lint": "pnpm exec eslint \"src/**/*.ts\"",
     "typecheck": "pnpm exec tsc -p tsconfig.json --noEmit",
