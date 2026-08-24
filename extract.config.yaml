@@ -35,6 +35,10 @@ excludePathSegments:
   - pnpm-lock.yaml
 
 postProcess:
+  - action: patch
+    file: pnpm-workspace.yaml
+    find: "packages:"
+    replace: "minimumReleaseAge: 0\npackages:"
   - action: delete
     path: AGENTS.md
   - action: delete
