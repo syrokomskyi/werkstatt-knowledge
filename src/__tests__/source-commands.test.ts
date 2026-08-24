@@ -4,7 +4,7 @@ import { runSourceStatus, createSourceStatusCommand } from "../source/status.ts"
 import { runSourceBind, createSourceBindCommand } from "../source/bind.ts";
 import { runSourceVerify, createSourceVerifyCommand } from "../source/verify.ts";
 import { createKnowledgeSourceModule } from "../source/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 describe("knowledge.source.scan", () => {
   it("returns pending stub result", async () => {

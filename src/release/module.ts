@@ -11,7 +11,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
 import { createReleaseCheckCommand } from "./check.ts";
 import { createReleaseEvidenceCommand } from "./evidence.ts";
 import { createReleaseManifestCommand } from "./manifest.ts";

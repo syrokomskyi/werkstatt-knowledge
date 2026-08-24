@@ -7,7 +7,7 @@ import { runCandidateValidate, createCandidateValidateCommand } from "../core/ca
 import { runPromote, createPromoteCommand } from "../core/promote.ts";
 import { runTransactionStatus, createTransactionStatusCommand } from "../core/transaction-status.ts";
 import { createKnowledgeCoreModule } from "../core/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 

@@ -16,7 +16,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt/plugin";
+import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-engine/plugin";
 import { runProjectionBuild } from "../materialize/projection-build.ts";
 
 export async function runKnowledgeBuildHook(ctx: PluginHookContext): Promise<HookResult> {

@@ -15,7 +15,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt/plugin";
+import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-engine/plugin";
 import { runMaterialize } from "../materialize/materialize.ts";
 
 export async function runKnowledgeMaterializeHook(ctx: PluginHookContext): Promise<HookResult> {

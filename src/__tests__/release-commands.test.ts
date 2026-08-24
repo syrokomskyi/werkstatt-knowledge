@@ -3,7 +3,7 @@ import { runReleaseCheck, createReleaseCheckCommand } from "../release/check.ts"
 import { runReleaseEvidence, createReleaseEvidenceCommand } from "../release/evidence.ts";
 import { runReleaseManifest, createReleaseManifestCommand } from "../release/manifest.ts";
 import { createKnowledgeReleaseModule } from "../release/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 

@@ -13,7 +13,7 @@ stripScopes:
   - "@warpgogol/"
 preservePackages:
   - "@warpgogol/werkstatt-knowledge"
-  - "@warpgogol/werkstatt"
+  - "@warpgogol/werkstatt-engine"
   - "@warpgogol/forge"
 packageManager: "pnpm"
 

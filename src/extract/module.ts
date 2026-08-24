@@ -11,7 +11,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
 import { createExtractListCommand } from "./list.ts";
 import { createExtractRunCommand } from "./run.ts";
 import { createExtractVerifyCommand } from "./verify.ts";

@@ -15,7 +15,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt/plugin";
+import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-engine/plugin";
 import { runSourceVerify } from "../source/verify.ts";
 import { runSourceStatus } from "../source/status.ts";
 import { runKnowledgeVerify } from "../core/verify.ts";

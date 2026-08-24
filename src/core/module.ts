@@ -11,7 +11,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
 import { createVerifyCommand } from "./verify.ts";
 import { createStatusCommand } from "./status.ts";
 import { createCoverageCommand } from "./coverage.ts";

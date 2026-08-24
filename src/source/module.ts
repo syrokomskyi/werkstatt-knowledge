@@ -11,7 +11,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
 import { createSourceScanCommand } from "./scan.ts";
 import { createSourceStatusCommand } from "./status.ts";
 import { createSourceBindCommand } from "./bind.ts";

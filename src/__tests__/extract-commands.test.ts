@@ -5,7 +5,7 @@ import { runExtractVerify, createExtractVerifyCommand } from "../extract/verify.
 import { runRefreshPrepare, createRefreshPrepareCommand } from "../extract/refresh-prepare.ts";
 import { runRefreshApply, createRefreshApplyCommand } from "../extract/refresh-apply.ts";
 import { createKnowledgeExtractModule } from "../extract/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 

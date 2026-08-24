@@ -11,7 +11,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
 import { createMaterializeCommand } from "./materialize.ts";
 import { createMaterializeVerifyCommand } from "./materialize-verify.ts";
 import { createProjectionStatusCommand } from "./projection-status.ts";

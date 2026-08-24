@@ -4,7 +4,7 @@ import { runMaterializeVerify, createMaterializeVerifyCommand } from "../materia
 import { runProjectionStatus, createProjectionStatusCommand } from "../materialize/projection-status.ts";
 import { runProjectionBuild, createProjectionBuildCommand } from "../materialize/projection-build.ts";
 import { createKnowledgeMaterializeModule } from "../materialize/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt/kernel/types";
+import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 
