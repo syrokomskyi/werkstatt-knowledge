@@ -43,6 +43,8 @@ export async function runCandidateValidate(
 export function createCandidateValidateCommand(): KernelCommandDefinition<CandidateValidateData> {
   return {
     name: "knowledge.candidate.validate",
+    contract: "knowledge",
+    rules: [],
     description: "Validate staging/laboratory candidates before promotion",
     scope: "workspace",
     cacheable: false,

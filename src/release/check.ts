@@ -41,6 +41,8 @@ export async function runReleaseCheck(
 export function createReleaseCheckCommand(): KernelCommandDefinition<ReleaseCheckData> {
   return {
     name: "knowledge.release.check",
+    contract: "knowledge",
+    rules: [],
     description: "Check publication policy, license metadata, and evidence excerpt policy (KNO-021, KNO-022)",
     scope: "workspace",
     cacheable: false,
