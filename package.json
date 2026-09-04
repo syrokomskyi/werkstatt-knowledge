@@ -1,6 +1,6 @@
 {
   "name": "@warpgogol/werkstatt-knowledge",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": false,
   "type": "module",
   "engines": {
@@ -66,9 +66,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@warpgogol/forge": "workspace:*",
-    "@warpgogol/werkstatt-engine": "workspace:*",
-    "@warpgogol/werkstatt-shared": "workspace:*"
+    "@warpgogol/forge": "*",
+    "@warpgogol/werkstatt-engine": "*",
+    "@warpgogol/werkstatt-shared": "*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
@@ -78,5 +78,6 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "8.68.0",
     "vitest": "^4.1.11"
-  }
+  },
+  "packageManager": "pnpm@11.10.0"
 }
