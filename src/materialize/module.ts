@@ -11,21 +11,25 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
+
 import { createMaterializeCommand } from "./materialize.ts";
 import { createMaterializeVerifyCommand } from "./materialize-verify.ts";
 import { createProjectionStatusCommand } from "./projection-status.ts";
 import { createProjectionBuildCommand } from "./projection-build.ts";
+import type { ModuleExport } from "@warpgogol/werkstatt-engine/runtime/desired-state";
 
-export function createKnowledgeMaterializeModule(): KernelModule {
+export function createKnowledgeMaterializeModule(): ModuleExport {
   return {
     name: "knowledge-materialize",
     version: "0.1.0",
-    register(registry) {
-      registry.registerCommand(createMaterializeCommand());
-      registry.registerCommand(createMaterializeVerifyCommand());
-      registry.registerCommand(createProjectionStatusCommand());
-      registry.registerCommand(createProjectionBuildCommand());
-    },
-  };
+      declarations: [],
+  commands: [
+      createMaterializeCommand(),
+      createMaterializeVerifyCommand(),
+      createProjectionStatusCommand(),
+      createProjectionBuildCommand(),
+    ],
+  pipelines: [
+
+  ]};
 }

@@ -11,21 +11,25 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
+
 import { createSourceScanCommand } from "./scan.ts";
 import { createSourceStatusCommand } from "./status.ts";
 import { createSourceBindCommand } from "./bind.ts";
 import { createSourceVerifyCommand } from "./verify.ts";
+import type { ModuleExport } from "@warpgogol/werkstatt-engine/runtime/desired-state";
 
-export function createKnowledgeSourceModule(): KernelModule {
+export function createKnowledgeSourceModule(): ModuleExport {
   return {
     name: "knowledge-source",
     version: "0.1.0",
-    register(registry) {
-      registry.registerCommand(createSourceScanCommand());
-      registry.registerCommand(createSourceStatusCommand());
-      registry.registerCommand(createSourceBindCommand());
-      registry.registerCommand(createSourceVerifyCommand());
-    },
-  };
+      declarations: [],
+  commands: [
+      createSourceScanCommand(),
+      createSourceStatusCommand(),
+      createSourceBindCommand(),
+      createSourceVerifyCommand(),
+    ],
+  pipelines: [
+
+  ]};
 }

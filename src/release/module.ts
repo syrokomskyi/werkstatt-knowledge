@@ -11,19 +11,23 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
+
 import { createReleaseCheckCommand } from "./check.ts";
 import { createReleaseEvidenceCommand } from "./evidence.ts";
 import { createReleaseManifestCommand } from "./manifest.ts";
+import type { ModuleExport } from "@warpgogol/werkstatt-engine/runtime/desired-state";
 
-export function createKnowledgeReleaseModule(): KernelModule {
+export function createKnowledgeReleaseModule(): ModuleExport {
   return {
     name: "knowledge-release",
     version: "0.1.0",
-    register(registry) {
-      registry.registerCommand(createReleaseCheckCommand());
-      registry.registerCommand(createReleaseEvidenceCommand());
-      registry.registerCommand(createReleaseManifestCommand());
-    },
-  };
+      declarations: [],
+  commands: [
+      createReleaseCheckCommand(),
+      createReleaseEvidenceCommand(),
+      createReleaseManifestCommand(),
+    ],
+  pipelines: [
+
+  ]};
 }

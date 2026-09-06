@@ -11,7 +11,7 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
+
 import { createVerifyCommand } from "./verify.ts";
 import { createStatusCommand } from "./status.ts";
 import { createCoverageCommand } from "./coverage.ts";
@@ -19,19 +19,23 @@ import { createAuditCommand } from "./audit.ts";
 import { createCandidateValidateCommand } from "./candidate-validate.ts";
 import { createPromoteCommand } from "./promote.ts";
 import { createTransactionStatusCommand } from "./transaction-status.ts";
+import type { ModuleExport } from "@warpgogol/werkstatt-engine/runtime/desired-state";
 
-export function createKnowledgeCoreModule(): KernelModule {
+export function createKnowledgeCoreModule(): ModuleExport {
   return {
     name: "knowledge-core",
     version: "0.1.0",
-    register(registry) {
-      registry.registerCommand(createVerifyCommand());
-      registry.registerCommand(createStatusCommand());
-      registry.registerCommand(createCoverageCommand());
-      registry.registerCommand(createAuditCommand());
-      registry.registerCommand(createCandidateValidateCommand());
-      registry.registerCommand(createPromoteCommand());
-      registry.registerCommand(createTransactionStatusCommand());
-    },
-  };
+      declarations: [],
+  commands: [
+      createVerifyCommand(),
+      createStatusCommand(),
+      createCoverageCommand(),
+      createAuditCommand(),
+      createCandidateValidateCommand(),
+      createPromoteCommand(),
+      createTransactionStatusCommand(),
+    ],
+  pipelines: [
+
+  ]};
 }

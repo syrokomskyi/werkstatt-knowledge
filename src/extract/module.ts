@@ -11,23 +11,27 @@
 </CHANGE_SUMMARY>
 */
 
-import type { KernelModule } from "@warpgogol/werkstatt-engine/kernel/types";
+
 import { createExtractListCommand } from "./list.ts";
 import { createExtractRunCommand } from "./run.ts";
 import { createExtractVerifyCommand } from "./verify.ts";
 import { createRefreshPrepareCommand } from "./refresh-prepare.ts";
 import { createRefreshApplyCommand } from "./refresh-apply.ts";
+import type { ModuleExport } from "@warpgogol/werkstatt-engine/runtime/desired-state";
 
-export function createKnowledgeExtractModule(): KernelModule {
+export function createKnowledgeExtractModule(): ModuleExport {
   return {
     name: "knowledge-extract",
     version: "0.1.0",
-    register(registry) {
-      registry.registerCommand(createExtractListCommand());
-      registry.registerCommand(createExtractRunCommand());
-      registry.registerCommand(createExtractVerifyCommand());
-      registry.registerCommand(createRefreshPrepareCommand());
-      registry.registerCommand(createRefreshApplyCommand());
-    },
-  };
+      declarations: [],
+  commands: [
+      createExtractListCommand(),
+      createExtractRunCommand(),
+      createExtractVerifyCommand(),
+      createRefreshPrepareCommand(),
+      createRefreshApplyCommand(),
+    ],
+  pipelines: [
+
+  ]};
 }
