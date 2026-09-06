@@ -4,7 +4,6 @@ import { runSourceStatus, createSourceStatusCommand } from "../source/status.ts"
 import { runSourceBind, createSourceBindCommand } from "../source/bind.ts";
 import { runSourceVerify, createSourceVerifyCommand } from "../source/verify.ts";
 import { createKnowledgeSourceModule } from "../source/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 describe("knowledge.source.scan", () => {
   it("returns pending stub result", async () => {
@@ -86,12 +85,7 @@ describe("createKnowledgeSourceModule", () => {
     expect(mod.name).toBe("knowledge-source");
     expect(mod.version).toBe("0.1.0");
 
-    const registered: string[] = [];
-    const registry = {
-      registerCommand: (cmd: { name: string }) => registered.push(cmd.name),
-      registerPipeline: () => {},
-    } as unknown as KernelModuleRegistry;
-    mod.register(registry);
+    const registered = mod.commands.map((c) => c.name);
     expect(registered).toContain("knowledge.source.scan");
     expect(registered).toContain("knowledge.source.status");
     expect(registered).toContain("knowledge.source.bind");

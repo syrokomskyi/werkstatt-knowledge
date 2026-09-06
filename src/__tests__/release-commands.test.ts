@@ -3,7 +3,6 @@ import { runReleaseCheck, createReleaseCheckCommand } from "../release/check.ts"
 import { runReleaseEvidence, createReleaseEvidenceCommand } from "../release/evidence.ts";
 import { runReleaseManifest, createReleaseManifestCommand } from "../release/manifest.ts";
 import { createKnowledgeReleaseModule } from "../release/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 
@@ -66,12 +65,7 @@ describe("createKnowledgeReleaseModule", () => {
     expect(mod.name).toBe("knowledge-release");
     expect(mod.version).toBe("0.1.0");
 
-    const registered: string[] = [];
-    const registry = {
-      registerCommand: (cmd: { name: string }) => registered.push(cmd.name),
-      registerPipeline: () => {},
-    } as unknown as KernelModuleRegistry;
-    mod.register(registry);
+    const registered = mod.commands.map((c) => c.name);
     expect(registered).toHaveLength(3);
     expect(registered).toContain("knowledge.release.check");
     expect(registered).toContain("knowledge.release.evidence");

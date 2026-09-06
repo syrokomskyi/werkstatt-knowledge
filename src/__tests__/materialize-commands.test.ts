@@ -1,10 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { runMaterialize, createMaterializeCommand } from "../materialize/materialize.ts";
-import { runMaterializeVerify, createMaterializeVerifyCommand } from "../materialize/materialize-verify.ts";
-import { runProjectionStatus, createProjectionStatusCommand } from "../materialize/projection-status.ts";
-import { runProjectionBuild, createProjectionBuildCommand } from "../materialize/projection-build.ts";
+import {
+  runMaterializeVerify,
+  createMaterializeVerifyCommand,
+} from "../materialize/materialize-verify.ts";
+import {
+  runProjectionStatus,
+  createProjectionStatusCommand,
+} from "../materialize/projection-status.ts";
+import {
+  runProjectionBuild,
+  createProjectionBuildCommand,
+} from "../materialize/projection-build.ts";
 import { createKnowledgeMaterializeModule } from "../materialize/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 
@@ -82,12 +90,7 @@ describe("createKnowledgeMaterializeModule", () => {
     expect(mod.name).toBe("knowledge-materialize");
     expect(mod.version).toBe("0.1.0");
 
-    const registered: string[] = [];
-    const registry = {
-      registerCommand: (cmd: { name: string }) => registered.push(cmd.name),
-      registerPipeline: () => {},
-    } as unknown as KernelModuleRegistry;
-    mod.register(registry);
+    const registered = mod.commands.map((c) => c.name);
     expect(registered).toHaveLength(4);
     expect(registered).toContain("knowledge.materialize");
     expect(registered).toContain("knowledge.materialize.verify");

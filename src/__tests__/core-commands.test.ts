@@ -3,11 +3,16 @@ import { runKnowledgeVerify, createVerifyCommand } from "../core/verify.ts";
 import { runKnowledgeStatus, createStatusCommand } from "../core/status.ts";
 import { runKnowledgeCoverage, createCoverageCommand } from "../core/coverage.ts";
 import { runKnowledgeAudit, createAuditCommand } from "../core/audit.ts";
-import { runCandidateValidate, createCandidateValidateCommand } from "../core/candidate-validate.ts";
+import {
+  runCandidateValidate,
+  createCandidateValidateCommand,
+} from "../core/candidate-validate.ts";
 import { runPromote, createPromoteCommand } from "../core/promote.ts";
-import { runTransactionStatus, createTransactionStatusCommand } from "../core/transaction-status.ts";
+import {
+  runTransactionStatus,
+  createTransactionStatusCommand,
+} from "../core/transaction-status.ts";
 import { createKnowledgeCoreModule } from "../core/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 
@@ -137,12 +142,7 @@ describe("createKnowledgeCoreModule", () => {
     expect(mod.name).toBe("knowledge-core");
     expect(mod.version).toBe("0.1.0");
 
-    const registered: string[] = [];
-    const registry = {
-      registerCommand: (cmd: { name: string }) => registered.push(cmd.name),
-      registerPipeline: () => {},
-    } as unknown as KernelModuleRegistry;
-    mod.register(registry);
+    const registered = mod.commands.map((c) => c.name);
     expect(registered).toHaveLength(7);
     expect(registered).toContain("knowledge.verify");
     expect(registered).toContain("knowledge.status");

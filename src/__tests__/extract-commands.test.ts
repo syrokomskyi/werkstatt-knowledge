@@ -5,7 +5,6 @@ import { runExtractVerify, createExtractVerifyCommand } from "../extract/verify.
 import { runRefreshPrepare, createRefreshPrepareCommand } from "../extract/refresh-prepare.ts";
 import { runRefreshApply, createRefreshApplyCommand } from "../extract/refresh-apply.ts";
 import { createKnowledgeExtractModule } from "../extract/module.ts";
-import type { KernelModuleRegistry } from "@warpgogol/werkstatt-engine/kernel/types";
 
 const WS = "/tmp/test-workspace";
 
@@ -99,12 +98,7 @@ describe("createKnowledgeExtractModule", () => {
     expect(mod.name).toBe("knowledge-extract");
     expect(mod.version).toBe("0.1.0");
 
-    const registered: string[] = [];
-    const registry = {
-      registerCommand: (cmd: { name: string }) => registered.push(cmd.name),
-      registerPipeline: () => {},
-    } as unknown as KernelModuleRegistry;
-    mod.register(registry);
+    const registered = mod.commands.map((c) => c.name);
     expect(registered).toHaveLength(5);
     expect(registered).toContain("knowledge.extract.list");
     expect(registered).toContain("knowledge.extract.run");
