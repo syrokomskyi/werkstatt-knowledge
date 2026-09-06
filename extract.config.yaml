@@ -6,7 +6,6 @@ forgePlugin: false
 projectDir: packages/werkstatt-knowledge
 destName: werkstatt-knowledge
 standalone: true
-versionBump: minor
 
 workspacePrefixes:
   - "@warpgogol/"
