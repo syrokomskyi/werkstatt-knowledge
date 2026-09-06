@@ -4,6 +4,8 @@
 
 Плагін Werkstatt для систем знань з підтримкою доказів. Реалізує `werkstatt/plugin@1` з `profileId: "knowledge-typescript-turborepo"`.
 
+> Розроблено в [Warpgogol](https://warpgogol.com) · Опубліковано як open source.
+
 ---
 
 ## Що робить цей плагін
@@ -70,11 +72,11 @@ pnpm dlx @warpgogol/forge@latest create --in-place --profile knowledge-typescrip
 
 ## Конвенції шляхів
 
-| Шлях | Значення |
-| --- | --- |
-| Директорія контенту | `knowledge` |
-| Директорія дистрибуції | `.generated/knowledge/dist` |
-| Точки входу | `knowledge/manifest.yaml`, `knowledge/ontology/schema-registry.yaml` |
+| Шлях                   | Значення                                                             |
+| ---------------------- | -------------------------------------------------------------------- |
+| Директорія контенту    | `knowledge`                                                          |
+| Директорія дистрибуції | `.generated/knowledge/dist`                                          |
+| Точки входу            | `knowledge/manifest.yaml`, `knowledge/ontology/schema-registry.yaml` |
 
 ---
 
@@ -162,3 +164,11 @@ pnpm exec repo-extract --config packages/werkstatt-knowledge/extract.config.yaml
 ## Ліцензія
 
 Apache-2.0
+
+## Відкрита інженерія
+
+Цей пакет походить із виробничої інженерної роботи в [Warpgogol](https://warpgogol.com), інженерній студії в Німеччині.
+
+Ми публікуємо багаторазові частини нашої інфраструктури, коли вони можуть бути корисними поза нашими власними проєктами. Він публікується незалежно від будь-якого комерційного сервісу Warpgogol. Використання цього пакету не створює жодної залежності від Warpgogol.
+
+Створено для реальних систем. Поширюється відкрито.

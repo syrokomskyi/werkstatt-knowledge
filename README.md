@@ -4,6 +4,8 @@
 
 Werkstatt plugin for evidence-backed knowledge systems. Implements `werkstatt/plugin@1` with `profileId: "knowledge-typescript-turborepo"`.
 
+> Engineered at [Warpgogol](https://warpgogol.com) · Released as open source.
+
 ## What this plugin does
 
 The Knowledge plugin provides a structured pipeline for building and maintaining evidence-backed knowledge bases — canonical records, source bindings, extraction, materialization, and release. It enforces 28 stack invariants (KNO-001..028) that govern source integrity, canonical record validity, evidence provenance, ontology governance, and release readiness.
@@ -111,3 +113,11 @@ src/
 ## License
 
 Apache-2.0
+
+## Open Engineering
+
+This package originated from production engineering work at [Warpgogol](https://warpgogol.com), an engineering studio in Germany.
+
+We publish reusable parts of our infrastructure when they can be useful beyond our own projects. It is published independently of any Warpgogol commercial service. Using this package does not create any dependency on Warpgogol.
+
+Built for real systems. Shared openly.
