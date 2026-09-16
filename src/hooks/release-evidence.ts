@@ -1,11 +1,8 @@
 /*
 <MODULE_CONTRACT>
 <purpose>hooks.releaseEvidence — emits knowledge-specific evidence packet.</purpose>
-<keywords>hook, release, evidence, knowledge</keywords>
-<responsibilities>
-  <item>Calls releaseEvidenceService.produceEvidence via runHook.</item>
-  <item>Returns evidence with dataset id, model version, canonical hash, counts.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not verify hashes — that is the integrity module's job.</item>
   <item>Does not modify canonical data.</item>
@@ -13,6 +10,9 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>RFC-1098: rewrite via runHook calling releaseEvidenceService directly.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

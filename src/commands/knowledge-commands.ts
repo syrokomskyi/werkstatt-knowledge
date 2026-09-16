@@ -1,12 +1,8 @@
 /*
 <MODULE_CONTRACT>
 <purpose>KNOWLEDGE_COMMANDS manifest — single source of truth for all knowledge kernel command metadata.</purpose>
-<keywords>manifest, commands, knowledge, manifest</keywords>
-<responsibilities>
-  <item>Declares command name, module, purpose, scope, IO globs, invariants, contract/rules per entry.</item>
-  <item>Provides loader thunks for implemented commands; absent loader means unimplemented (pending).</item>
-  <item>declareKnowledgeCommand builds CommandDeclaration from manifest entry with DNA-82 result shape.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not implement command logic — loaders point at handler files that delegate to services.</item>
   <item>Does not export Data interfaces for unimplemented commands.</item>
@@ -14,6 +10,9 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>RFC-1098: initial KNOWLEDGE_COMMANDS manifest + declareKnowledgeCommand helper.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

@@ -1,14 +1,8 @@
 /*
 <MODULE_CONTRACT>
 <purpose>Plugin entry for werkstatt-knowledge — evidence-backed knowledge systems stack.</purpose>
-<keywords>plugin, knowledge, evidence, plugin-entry</keywords>
-<responsibilities>
-  <item>Exports werkstattKnowledgePlugin implementing WerkstattPlugin (werkstatt/plugin@1).</item>
-  <item>Registers 5 kernel module loaders: source, core, extract, materialize, release.</item>
-  <item>Registers all 5 hooks: materialize, build, checkGate, releaseEvidence, scaffoldProject.</item>
-  <item>Declares KNO-001..028 stack invariants.</item>
-  <item>deployAdapters intentionally absent — deployment is workspace infrastructure.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Do not import from @warpgogol/werkstatt-site or any other stack plugin.</item>
   <item>Do not import from the engine package beyond plugin contract types.</item>
@@ -16,7 +10,9 @@
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial werkstatt-knowledge plugin entry per SPEC-v1.0 and RFC-0894.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

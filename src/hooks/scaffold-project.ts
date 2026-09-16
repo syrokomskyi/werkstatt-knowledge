@@ -1,20 +1,17 @@
 /*
 <MODULE_CONTRACT>
 <purpose>hooks.scaffoldProject — creates the KB-side Turborepo skeleton.</purpose>
-<keywords>hook, scaffold, onboarding, knowledge</keywords>
-<responsibilities>
-  <item>Creates knowledge/, staging/, laboratory/, projections/ directories.</item>
-  <item>Creates apps/ and packages/ placeholder directories.</item>
-  <item>Creates docs/rfc and docs/adr directories.</item>
-  <item>Creates knowledge.config.yaml and knowledge/manifest.yaml skeletons.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not populate, update, clone, or mutate the sibling source bundle.</item>
   <item>Does not install dependencies — the consumer runs pnpm install after scaffold.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial scaffold project hook per SPEC-v1.0 section 6.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

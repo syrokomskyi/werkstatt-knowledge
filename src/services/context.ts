@@ -1,17 +1,17 @@
 /*
 <MODULE_CONTRACT>
 <purpose>KnowledgeContext — built once per invocation by adapters and hooks.</purpose>
-<keywords>context, config, knowledge, service</keywords>
-<responsibilities>
-  <item>Resolves and parses knowledge.config.yaml into KnowledgeConfig.</item>
-  <item>Provides logger and workspaceRoot to all services.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not enforce invariants — enforcement lives in validators.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>RFC-1098: initial KnowledgeContext + resolveKnowledgeContext + KnowledgeConfigError.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

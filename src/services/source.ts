@@ -1,13 +1,8 @@
 /*
 <MODULE_CONTRACT>
 <purpose>SourceService — domain operations for source root resolution, scanning, and fingerprinting.</purpose>
-<keywords>source, scan, fingerprint, knowledge, service</keywords>
-<responsibilities>
-  <item>Resolves ../<kb-id>-source sibling directory pattern.</item>
-  <item>Lists source units within the resolved root.</item>
-  <item>Computes sha256 fingerprints for source units.</item>
-  <item>Compares current fingerprints with canonical bindings.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not write or mutate source — read-only (KNO-004).</item>
   <item>Does not return KernelCommandResult — domain types only.</item>
@@ -15,6 +10,9 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>RFC-1098: initial SourceService implementation (resolveRoot, scanUnits, fingerprint, compareBindings).</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

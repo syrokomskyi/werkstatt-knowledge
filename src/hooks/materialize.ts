@@ -1,17 +1,17 @@
 /*
 <MODULE_CONTRACT>
 <purpose>hooks.materialize — compiles verified canonical knowledge into materialized dataset.</purpose>
-<keywords>hook, materialize, knowledge</keywords>
-<responsibilities>
-  <item>Calls materializerService.materialize via runHook.</item>
-  <item>Produces materialization manifest with canonical hash and model version.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not write canonical data — writes only .generated/ outputs.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>RFC-1098: rewrite via runHook calling materializerService directly.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 

@@ -1,18 +1,17 @@
 /*
 <MODULE_CONTRACT>
 <purpose>runHook — shared hook runner that calls services directly and wraps results.</purpose>
-<keywords>hook, runner, knowledge, service</keywords>
-<responsibilities>
-  <item>Resolves KnowledgeContext from PluginHookContext.</item>
-  <item>Calls a service function and maps result to HookResult.</item>
-  <item>Catches errors and returns HookResult with success: false.</item>
-</responsibilities>
+
+
 <non-goals>
   <item>Does not route through kernel command execution — calls services directly.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>RFC-1098: initial runHook helper for service-delegating hooks.</item>
+  <item>RFC-1097: step 6 — compass.migrate codemod run
+
+Mechanical v1 to v2 header migration across the workspace: 942 files rewritten — CHANGE_SUMMARY windows collapsed into <history>, forbidden v1 blocks stripped, KEY_DECISIONS seeded from @ai-invariant comments (5 files) or TODO placeholders (103 files), blocks reordered to canonical order.</item>
 </CHANGE_SUMMARY>
 */
 
