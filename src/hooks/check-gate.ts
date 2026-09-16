@@ -1,74 +1,124 @@
 /*
 <MODULE_CONTRACT>
-<purpose>hooks.checkGate — runs the complete knowledge check gate.</purpose>
+<purpose>hooks.checkGate — runs the complete knowledge check gate with fail-closed pending semantics.</purpose>
 <keywords>hook, checkGate, validators, knowledge</keywords>
 <responsibilities>
-  <item>Runs source, canonical, evidence, governance, and boundary checks.</item>
-  <item>Aggregates results from all validators into a single HookResult.</item>
+  <item>Runs ordered validator list derived from KNOWLEDGE_INVARIANTS check fields.</item>
+  <item>Aggregates results into GateResult with perCheck, unimplemented, and violations.</item>
+  <item>Fails closed on pending validators unless --allow-pending flag is set.</item>
 </responsibilities>
 <non-goals>
   <item>Does not implement individual validator logic — orchestrates validators only.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial check gate hook per SPEC-v1.0 section 6.</item>
+  <item>RFC-1098: fail-closed pending, --allow-pending, ordered validator list, Diagnostic output.</item>
 </CHANGE_SUMMARY>
 */
 
 import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-shared/plugin";
-import { runSourceVerify } from "../source/verify.ts";
-import { runSourceStatus } from "../source/status.ts";
-import { runKnowledgeVerify } from "../core/verify.ts";
-import { runKnowledgeAudit } from "../core/audit.ts";
-import { runKnowledgeCoverage } from "../core/coverage.ts";
-import { runMaterializeVerify } from "../materialize/materialize-verify.ts";
-import { runReleaseCheck } from "../release/check.ts";
+import type { Diagnostic } from "@warpgogol/werkstatt-engine/schemas";
+import { KNOWLEDGE_COMMANDS } from "../commands/knowledge-commands.ts";
+import { resolveKnowledgeContext } from "../services/context.ts";
+
+export interface GateResult {
+  success: boolean;
+  violations: Diagnostic[];
+  unimplemented: string[];
+  perCheck: Record<string, "pass" | "fail" | "pending">;
+}
+
+const VALIDATOR_ORDER = [
+  "knowledge.source.scan",
+  "knowledge.source.status",
+  "knowledge.source.verify",
+  "knowledge.verify",
+  "knowledge.audit",
+  "knowledge.coverage",
+  "knowledge.extract.run",
+  "knowledge.materialize.verify",
+  "knowledge.release.check",
+  "knowledge.promote",
+] as const;
 
 export async function runKnowledgeCheckGate(ctx: PluginHookContext): Promise<HookResult> {
   const projectRoot = ctx.workpiecePath ?? ctx.workspaceRoot;
-  const errors: string[] = [];
+  const allowPending =
+    (ctx as PluginHookContext & { flags?: Record<string, unknown> }).flags?.["allow-pending"] ===
+    true;
+  const kctx = resolveKnowledgeContext(projectRoot, {
+    info: (msg: string) => ctx.logger.info(msg),
+    warn: (msg: string) => ctx.logger.warn(msg),
+    error: (msg: string) => ctx.logger.error(msg),
+  });
 
-  const sourceStatus = await runSourceStatus(projectRoot);
-  if (sourceStatus.exitCode !== 0) {
-    errors.push(`knowledge.source.status: ${sourceStatus.summary}`);
+  const perCheck: Record<string, "pass" | "fail" | "pending"> = {};
+  const unimplemented: string[] = [];
+  const violations: Diagnostic[] = [];
+
+  for (const commandName of VALIDATOR_ORDER) {
+    const entry = KNOWLEDGE_COMMANDS.find((e) => e.name === commandName);
+    if (!entry) {
+      perCheck[commandName] = "pending";
+      unimplemented.push(commandName);
+      continue;
+    }
+
+    if (!entry.loader) {
+      perCheck[commandName] = "pending";
+      unimplemented.push(commandName);
+      continue;
+    }
+
+    try {
+      const mod = await entry.loader();
+      const result = await mod.run(kctx, { argv: [], flags: {} });
+      const status = (result.data as Record<string, unknown> | undefined)?.status as
+        "pass" | "fail" | "pending" | undefined;
+      perCheck[commandName] = status ?? (result.exitCode === 0 ? "pass" : "fail");
+
+      if (result.exitCode !== 0) {
+        const data = result.data as Record<string, unknown> | undefined;
+        const msgs = (data?.violations as string[] | undefined) ?? [
+          result.summary ?? "unknown error",
+        ];
+        for (const msg of msgs) {
+          violations.push({
+            ruleId: commandName,
+            severity: "error",
+            message: `${commandName}: ${msg}`,
+          });
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      perCheck[commandName] = "fail";
+      violations.push({
+        ruleId: commandName,
+        severity: "error",
+        message: `${commandName}: ${message}`,
+      });
+    }
   }
 
-  const sourceVerify = await runSourceVerify(projectRoot);
-  if (sourceVerify.exitCode !== 0) {
-    errors.push(`knowledge.source.verify: ${sourceVerify.summary}`);
-  }
-
-  const knowledgeVerify = await runKnowledgeVerify(projectRoot);
-  if (knowledgeVerify.exitCode !== 0) {
-    errors.push(`knowledge.verify: ${knowledgeVerify.summary}`);
-  }
-
-  const audit = await runKnowledgeAudit(projectRoot);
-  if (audit.exitCode !== 0) {
-    errors.push(`knowledge.audit: ${audit.summary}`);
-  }
-
-  const coverage = await runKnowledgeCoverage(projectRoot);
-  if (coverage.exitCode !== 0) {
-    errors.push(`knowledge.coverage: ${coverage.summary}`);
-  }
-
-  const materializeVerify = await runMaterializeVerify(projectRoot);
-  if (materializeVerify.exitCode !== 0) {
-    errors.push(`knowledge.materialize.verify: ${materializeVerify.summary}`);
-  }
-
-  const releaseCheck = await runReleaseCheck(projectRoot);
-  if (releaseCheck.exitCode !== 0) {
-    errors.push(`knowledge.release.check: ${releaseCheck.summary}`);
-  }
+  const hasPending = unimplemented.length > 0;
+  const hasViolations = violations.length > 0;
+  const success = !hasViolations && (allowPending || !hasPending);
 
   ctx.logger.info(
-    `checkGate: source=${sourceVerify.data?.status}, verify=${knowledgeVerify.data?.status}, audit=${audit.data?.status}, coverage=${coverage.data?.status}, materialize=${materializeVerify.data?.status}, release=${releaseCheck.data?.status}`,
+    `checkGate: ${Object.entries(perCheck)
+      .map(([k, v]) => `${k.split(".").pop()}=${v}`)
+      .join(", ")}`,
   );
 
   return {
-    success: errors.length === 0,
-    errors: errors.length > 0 ? errors : undefined,
+    success,
+    errors: violations.length > 0 ? violations.map((v) => v.message) : undefined,
+    data: {
+      success,
+      perCheck,
+      unimplemented,
+      violations,
+    } satisfies GateResult,
   };
 }

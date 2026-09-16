@@ -57,7 +57,3 @@ export const werkstattKnowledgePlugin: WerkstattPlugin = {
 
 export { knowledgePathConventions, KNOWLEDGE_PATHS } from "./paths/knowledge-paths.ts";
 export { KNOWLEDGE_INVARIANTS } from "./invariants/knowledge-invariants.ts";
-export type { SourceScanData } from "./source/scan.ts";
-export type { SourceStatusData } from "./source/status.ts";
-export type { SourceBindData } from "./source/bind.ts";
-export type { SourceVerifyData } from "./source/verify.ts";

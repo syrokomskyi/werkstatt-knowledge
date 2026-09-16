@@ -1,35 +1,19 @@
 /*
 <MODULE_CONTRACT>
-<purpose>knowledge-source module — registers source boundary commands.</purpose>
-<keywords>source, scan, bind, verify, knowledge</keywords>
+<purpose>knowledge-source module — registers source scan, status, bind, and verify commands.</purpose>
+<keywords>source, scan, knowledge</keywords>
 <non-goals>
-  <item>Do not implement full domain logic — Phase 1 stubs only.</item>
+  <item>Do not implement full domain logic — delegates to services via manifest.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial knowledge-source module per SPEC-v1.0 section 4.</item>
+  <item>RFC-1098: rewrite to use KNOWLEDGE_COMMANDS manifest.</item>
 </CHANGE_SUMMARY>
 */
 
-
-import { createSourceScanCommand } from "./scan.ts";
-import { createSourceStatusCommand } from "./status.ts";
-import { createSourceBindCommand } from "./bind.ts";
-import { createSourceVerifyCommand } from "./verify.ts";
+import { buildModule } from "../commands/knowledge-commands.ts";
 import type { ModuleExport } from "@warpgogol/werkstatt-engine/runtime/desired-state";
 
 export function createKnowledgeSourceModule(): ModuleExport {
-  return {
-    name: "knowledge-source",
-    version: "0.1.0",
-      declarations: [],
-  commands: [
-      createSourceScanCommand(),
-      createSourceStatusCommand(),
-      createSourceBindCommand(),
-      createSourceVerifyCommand(),
-    ],
-  pipelines: [
-
-  ]};
+  return buildModule("knowledge-source", "0.1.0");
 }

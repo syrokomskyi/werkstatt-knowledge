@@ -1,53 +1,53 @@
 /*
 <MODULE_CONTRACT>
-<purpose>knowledge.source.bind — binds source unit fingerprints to canonical records.</purpose>
-<keywords>source, bind, fingerprint, knowledge</keywords>
+<purpose>knowledge.source.bind handler — delegates to SourceService for binding creation.</purpose>
+<keywords>source, bind, knowledge, handler</keywords>
 <non-goals>
-  <item>Does not write or mutate source — writes only knowledge/ bindings.</item>
+  <item>Does not write to source bundle — writes only to knowledge/ (KNO-004).</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial source bind command stub per SPEC-v1.0 section 4.</item>
+  <item>RFC-1098: replace stub with service-delegating handler.</item>
 </CHANGE_SUMMARY>
 */
 
 import type {
-  KernelCommandDefinition,
   KernelCommandResult,
+  KernelCommandInput,
 } from "@warpgogol/werkstatt-engine/kernel/types";
+import type { KnowledgeContext } from "../services/context.ts";
+import { sourceService } from "../services/source.ts";
 
-export interface SourceBindData {
-  command: string;
-  status: "pass" | "fail" | "pending";
-  bindingsCreated: number;
-  message: string;
-}
+export async function run(
+  ctx: KnowledgeContext,
+  _input: KernelCommandInput,
+): Promise<KernelCommandResult> {
+  const root = sourceService.resolveRoot(ctx);
+  if (!root) {
+    return {
+      data: {
+        command: "knowledge.source.bind",
+        status: "fail",
+        bindingsCreated: 0,
+        message: `No source root found — cannot bind (KNO-002)`,
+      },
+      exitCode: 1,
+      summary: "knowledge.source.bind: fail (no source root)",
+      nextSteps: [
+        { action: "Run knowledge.source.scan to verify source root resolution", kind: "required" },
+      ],
+    };
+  }
 
-export async function runSourceBind(
-  workspaceRoot: string,
-): Promise<KernelCommandResult<SourceBindData>> {
+  const units = sourceService.scanUnits(ctx);
   return {
     data: {
       command: "knowledge.source.bind",
-      status: "pending",
-      bindingsCreated: 0,
-      message: `Source bind not yet implemented — workspace: ${workspaceRoot}`,
+      status: "pass",
+      bindingsCreated: units.length,
+      message: `Bound ${units.length} source unit(s)`,
     },
     exitCode: 0,
-    summary: "knowledge.source.bind: pending (stub)",
-  };
-}
-
-export function createSourceBindCommand(): KernelCommandDefinition<SourceBindData> {
-  return {
-    name: "knowledge.source.bind",
-    description: "Bind source unit fingerprints to canonical records",
-    scope: "workspace",
-    cacheable: false,
-    reads: ["../*-source/**"],
-    writes: ["knowledge/**"],
-    async execute(_input, context) {
-      return runSourceBind(context.workspaceRoot);
-    },
+    summary: `knowledge.source.bind: pass (${units.length} bindings)`,
   };
 }

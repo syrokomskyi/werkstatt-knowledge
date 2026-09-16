@@ -43,51 +43,45 @@ If commands fail due to environment, state this explicitly — do not claim veri
 ```text
 src/
   index.ts                          # Plugin entry — werkstattKnowledgePlugin
+  commands/
+    knowledge-commands.ts           # KNOWLEDGE_COMMANDS manifest + declareKnowledgeCommand + buildModule
+  services/
+    context.ts                      # KnowledgeContext, resolveKnowledgeContext, KnowledgeConfigError, NotImplementedError
+    source.ts                       # SourceService — resolveRoot, scanUnits, fingerprint, compareBindings (implemented)
+    verification.ts                 # VerificationService — skeleton (NotImplementedError)
+    transaction.ts                  # TransactionService — skeleton (NotImplementedError)
+    extractor-registry.ts           # ExtractorRegistryService — skeleton (NotImplementedError)
+    materializer.ts                 # MaterializerService — skeleton (NotImplementedError)
+    release-evidence.ts             # ReleaseEvidenceService — skeleton (NotImplementedError)
   paths/
-    knowledge-paths.ts              # Knowledge path conventions
+    knowledge-paths.ts              # KNOWLEDGE_PATHS + derived knowledgePathConventions
   invariants/
     knowledge-invariants.ts         # KNO-001..028 stack invariant declarations
   source/
-    module.ts                       # knowledge-source module registration
-    scan.ts                         # knowledge.source.scan (KNO-002, KNO-025)
-    status.ts                       # knowledge.source.status (KNO-005)
-    bind.ts                         # knowledge.source.bind
-    verify.ts                       # knowledge.source.verify (KNO-003, KNO-004, KNO-028)
+    module.ts                       # knowledge-source module registration (manifest-driven)
+    scan.ts                         # knowledge.source.scan handler (delegates to SourceService)
+    status.ts                       # knowledge.source.status handler (delegates to SourceService)
+    bind.ts                         # knowledge.source.bind handler (delegates to SourceService)
+    verify.ts                       # knowledge.source.verify handler (delegates to SourceService)
   core/
-    module.ts                       # knowledge-core module registration
-    verify.ts                       # knowledge.verify (KNO-001, KNO-007..015, KNO-023..024)
-    status.ts                       # knowledge.status
-    coverage.ts                     # knowledge.coverage (KNO-018)
-    audit.ts                        # knowledge.audit (KNO-016..017, KNO-020)
-    candidate-validate.ts           # knowledge.candidate.validate
-    promote.ts                      # knowledge.promote (KNO-026)
-    transaction-status.ts           # knowledge.transaction.status
+    module.ts                       # knowledge-core module registration (manifest-driven)
   extract/
-    module.ts                       # knowledge-extract module registration
-    list.ts                         # knowledge.extract.list
-    run.ts                          # knowledge.extract.run (KNO-006)
-    verify.ts                       # knowledge.extract.verify
-    refresh-prepare.ts              # knowledge.refresh.prepare
-    refresh-apply.ts                # knowledge.refresh.apply
+    module.ts                       # knowledge-extract module registration (manifest-driven)
   materialize/
-    module.ts                       # knowledge-materialize module registration
-    materialize.ts                  # knowledge.materialize
-    materialize-verify.ts           # knowledge.materialize.verify (KNO-019, KNO-027)
-    projection-status.ts            # knowledge.projection.status
-    projection-build.ts             # knowledge.projection.build
+    module.ts                       # knowledge-materialize module registration (manifest-driven)
   release/
-    module.ts                       # knowledge-release module registration
-    check.ts                        # knowledge.release.check (KNO-021, KNO-022)
-    evidence.ts                     # knowledge.release.evidence
-    manifest.ts                     # knowledge.release.manifest
+    module.ts                       # knowledge-release module registration (manifest-driven)
   hooks/
     index.ts                        # Hooks barrel export
+    run-hook.ts                     # runHook helper — calls services directly
     materialize.ts                  # hooks.materialize
     build.ts                        # hooks.build
-    check-gate.ts                   # hooks.checkGate
+    check-gate.ts                   # hooks.checkGate (fail-closed pending, --allow-pending)
     release-evidence.ts             # hooks.releaseEvidence
     scaffold-project.ts             # hooks.scaffoldProject
 ```
+
+**Command registration discipline:** All 23 kernel commands are declared in `src/commands/knowledge-commands.ts` (`KNOWLEDGE_COMMANDS`). Each `*.module.ts` file filters the manifest by module name and maps entries via `declareKnowledgeCommand`. Commands without a `loader` return `status: "pending"` with `exitCode: 1` (fail-closed). To implement a command, add a `loader` thunk pointing at a handler file that delegates to a service in `src/services/`.
 
 ## Plugin contract
 

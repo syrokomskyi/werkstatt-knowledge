@@ -16,3 +16,4 @@ export { runKnowledgeBuildHook } from "./build.ts";
 export { runKnowledgeCheckGate } from "./check-gate.ts";
 export { runKnowledgeReleaseEvidenceHook } from "./release-evidence.ts";
 export { runKnowledgeScaffoldProject } from "./scaffold-project.ts";
+export { runHook } from "./run-hook.ts";

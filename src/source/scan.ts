@@ -1,54 +1,58 @@
 /*
 <MODULE_CONTRACT>
-<purpose>knowledge.source.scan — resolves fixed sibling source root and lists source units.</purpose>
-<keywords>source, scan, knowledge</keywords>
+<purpose>knowledge.source.scan handler — delegates to SourceService.scanUnits.</purpose>
+<keywords>source, scan, knowledge, handler</keywords>
 <non-goals>
   <item>Does not write or mutate source — read-only.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial source scan command stub per SPEC-v1.0 section 4.</item>
+  <item>RFC-1098: replace stub with service-delegating handler.</item>
 </CHANGE_SUMMARY>
 */
 
 import type {
-  KernelCommandDefinition,
   KernelCommandResult,
+  KernelCommandInput,
 } from "@warpgogol/werkstatt-engine/kernel/types";
+import type { KnowledgeContext } from "../services/context.ts";
+import { sourceService } from "../services/source.ts";
 
-export interface SourceScanData {
-  command: string;
-  status: "pass" | "fail" | "pending";
-  sourceRoot: string | null;
-  sourceUnits: string[];
-  message: string;
-}
+export async function run(
+  ctx: KnowledgeContext,
+  _input: KernelCommandInput,
+): Promise<KernelCommandResult> {
+  const root = sourceService.resolveRoot(ctx);
+  if (!root) {
+    return {
+      data: {
+        command: "knowledge.source.scan",
+        status: "fail",
+        sourceRoot: null,
+        sourceUnits: [],
+        message: `No source root found — expected ../<kb-id>-source sibling directory (KNO-002)`,
+      },
+      exitCode: 1,
+      summary: "knowledge.source.scan: fail (no source root)",
+      nextSteps: [
+        {
+          action: "Create a sibling directory named <workspace-id>-source with source units",
+          kind: "required",
+        },
+      ],
+    };
+  }
 
-export async function runSourceScan(
-  workspaceRoot: string,
-): Promise<KernelCommandResult<SourceScanData>> {
+  const units = sourceService.scanUnits(ctx);
   return {
     data: {
       command: "knowledge.source.scan",
-      status: "pending",
-      sourceRoot: null,
-      sourceUnits: [],
-      message: `Source scan not yet implemented — workspace: ${workspaceRoot}`,
+      status: "pass",
+      sourceRoot: root,
+      sourceUnits: units,
+      message: `Scanned ${units.length} source unit(s) from ${root}`,
     },
     exitCode: 0,
-    summary: "knowledge.source.scan: pending (stub)",
-  };
-}
-
-export function createSourceScanCommand(): KernelCommandDefinition<SourceScanData> {
-  return {
-    name: "knowledge.source.scan",
-    description: "Resolve fixed sibling source root and list source units (KNO-002, KNO-025)",
-    scope: "workspace",
-    cacheable: false,
-    reads: ["../*-source/**"],
-    async execute(_input, context) {
-      return runSourceScan(context.workspaceRoot);
-    },
+    summary: `knowledge.source.scan: pass (${units.length} units)`,
   };
 }

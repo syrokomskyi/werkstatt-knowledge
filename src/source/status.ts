@@ -1,54 +1,40 @@
 /*
 <MODULE_CONTRACT>
-<purpose>knowledge.source.status — compares current source fingerprints with canonical bindings.</purpose>
-<keywords>source, status, drift, knowledge</keywords>
+<purpose>knowledge.source.status handler — delegates to SourceService.compareBindings.</purpose>
+<keywords>source, status, drift, knowledge, handler</keywords>
 <non-goals>
   <item>Does not write or mutate source — read-only.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial source status command stub per SPEC-v1.0 section 4.</item>
+  <item>RFC-1098: replace stub with service-delegating handler.</item>
 </CHANGE_SUMMARY>
 */
 
 import type {
-  KernelCommandDefinition,
   KernelCommandResult,
+  KernelCommandInput,
 } from "@warpgogol/werkstatt-engine/kernel/types";
+import type { KnowledgeContext } from "../services/context.ts";
+import { sourceService } from "../services/source.ts";
 
-export interface SourceStatusData {
-  command: string;
-  status: "pass" | "fail" | "pending";
-  driftDetected: boolean;
-  bindings: number;
-  message: string;
-}
-
-export async function runSourceStatus(
-  workspaceRoot: string,
-): Promise<KernelCommandResult<SourceStatusData>> {
+export async function run(
+  ctx: KnowledgeContext,
+  _input: KernelCommandInput,
+): Promise<KernelCommandResult> {
+  const drift = sourceService.compareBindings(ctx);
+  const driftDetected = drift.some((d) => d.drift);
   return {
     data: {
       command: "knowledge.source.status",
-      status: "pending",
-      driftDetected: false,
-      bindings: 0,
-      message: `Source status not yet implemented — workspace: ${workspaceRoot}`,
+      status: driftDetected ? "fail" : "pass",
+      driftDetected,
+      bindings: drift.length,
+      message: driftDetected
+        ? `${drift.filter((d) => d.drift).length} binding(s) drifted`
+        : `All ${drift.length} binding(s) current`,
     },
-    exitCode: 0,
-    summary: "knowledge.source.status: pending (stub)",
-  };
-}
-
-export function createSourceStatusCommand(): KernelCommandDefinition<SourceStatusData> {
-  return {
-    name: "knowledge.source.status",
-    description: "Compare current source fingerprints with canonical bindings (KNO-005)",
-    scope: "workspace",
-    cacheable: false,
-    reads: ["../*-source/**", "knowledge/**"],
-    async execute(_input, context) {
-      return runSourceStatus(context.workspaceRoot);
-    },
+    exitCode: driftDetected ? 1 : 0,
+    summary: `knowledge.source.status: ${driftDetected ? "fail (drift)" : "pass"}`,
   };
 }

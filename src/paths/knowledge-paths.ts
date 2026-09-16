@@ -13,12 +13,6 @@
 
 import type { StackPathConventions } from "@warpgogol/werkstatt-shared/plugin";
 
-export const knowledgePathConventions: StackPathConventions = {
-  contentDir: "knowledge",
-  distDir: ".generated/knowledge/dist",
-  entryPoints: ["knowledge/manifest.yaml", "knowledge/ontology/schema-registry.yaml"],
-};
-
 export const KNOWLEDGE_PATHS = {
   contentDir: "knowledge",
   distDir: ".generated/knowledge/dist",
@@ -30,3 +24,9 @@ export const KNOWLEDGE_PATHS = {
   generatedDir: ".generated/knowledge",
   configYaml: "knowledge.config.yaml",
 } as const;
+
+export const knowledgePathConventions: StackPathConventions = {
+  contentDir: KNOWLEDGE_PATHS.contentDir,
+  distDir: KNOWLEDGE_PATHS.distDir,
+  entryPoints: [KNOWLEDGE_PATHS.manifest, KNOWLEDGE_PATHS.schemaRegistry],
+};

@@ -3,7 +3,7 @@
 <purpose>hooks.build — builds configured projection packages from current materialization.</purpose>
 <keywords>hook, build, projections, knowledge</keywords>
 <responsibilities>
-  <item>Runs knowledge.projection.build command.</item>
+  <item>Calls materializerService.projectionBuild via runHook.</item>
   <item>May invoke Turborepo tasks for apps/web, apps/mcp, and other projections.</item>
 </responsibilities>
 <non-goals>
@@ -12,34 +12,17 @@
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial build hook per SPEC-v1.0 section 6.</item>
+  <item>RFC-1098: rewrite via runHook calling materializerService directly.</item>
 </CHANGE_SUMMARY>
 */
 
 import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-shared/plugin";
-import { runProjectionBuild } from "../materialize/projection-build.ts";
+import { runHook } from "./run-hook.ts";
+import { materializerService } from "../services/materializer.ts";
 
 export async function runKnowledgeBuildHook(ctx: PluginHookContext): Promise<HookResult> {
-  const projectRoot = ctx.workpiecePath ?? ctx.workspaceRoot;
-
-  try {
-    const result = await runProjectionBuild(projectRoot);
-
-    if (result.exitCode !== 0) {
-      return {
-        success: false,
-        errors: [`knowledge.projection.build: ${result.summary}`],
-      };
-    }
-
-    ctx.logger.info(`build hook: ${result.summary}`);
-    return { success: true, data: result.data };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    ctx.logger.error(`build hook failed: ${message}`);
-    return {
-      success: false,
-      errors: [`build hook failed: ${message}`],
-    };
-  }
+  return runHook("build", ctx, async (kctx) => {
+    const result = materializerService.projectionBuild(kctx);
+    return { success: true, data: result };
+  });
 }
