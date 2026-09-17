@@ -92,7 +92,7 @@ src/
     scaffold-project.ts             # hooks.scaffoldProject
 ```
 
-**Command registration discipline:** All 23 kernel commands are declared in `src/commands/knowledge-commands.ts` (`KNOWLEDGE_COMMANDS`). Each `*.module.ts` file filters the manifest by module name and maps entries via `declareKnowledgeCommand`. Commands without a `loader` return `status: "pending"` with `exitCode: 1` (fail-closed). To implement a command, add a `loader` thunk pointing at a handler file that delegates to a service in `src/services/`.
+**Command registration discipline:** All 23 kernel commands are declared in `src/commands/knowledge-commands.ts` (`KNOWLEDGE_COMMANDS`). Each `*.module.ts` file filters the manifest by module name and maps entries via `declareKnowledgeCommand`. Commands without a `loader` return `status: "pending"` with `exitCode: 1` (fail-closed). To implement a command, add a `loader` thunk pointing at a handler file that delegates to a service in `src/services/`. When wiring a `loader` to a previously pending command, update stale `status: "pending"` assertions: `src/__tests__/manifest.test.ts` (the pending-result test must target a still-unwired command) and `src/__tests__/check-gate.test.ts` (unimplemented list; the `--allow-pending` fixture needs a minimal valid KB — manifest, registry, `tools/kernel.config.ts` — so implemented validators pass).
 
 ## Plugin contract
 

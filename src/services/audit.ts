@@ -12,8 +12,9 @@
 </CHANGE_SUMMARY>
 */
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { collectFiles } from "@warpgogol/werkstatt-shared/node/fs";
 import type { KnowledgeContext } from "./context.ts";
 import { loadRegistry } from "../schemas/record-io.ts";
 import { KNOWLEDGE_PATHS } from "../paths/knowledge-paths.ts";
@@ -43,26 +44,16 @@ function violation(
   return { ruleId, severity, message, path };
 }
 
-/** Recursively collect *.md files under dir. */
-function collectMarkdown(dir: string): string[] {
-  if (!existsSync(dir)) return [];
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...collectMarkdown(full));
-    else if (entry.isFile() && entry.name.endsWith(".md")) out.push(full);
-  }
-  return out;
-}
-
 /**
  * Build a map of decisionRef → status by scanning docs/rfcs and docs/adrs
  * frontmatter. Only `accepted` and `implemented` statuses satisfy KNO-016/017.
  */
-function buildDecisionIndex(workspaceRoot: string): Map<string, string> {
+async function buildDecisionIndex(workspaceRoot: string): Promise<Map<string, string>> {
   const index = new Map<string, string>();
   for (const base of ["docs/rfcs", "docs/adrs"]) {
-    for (const file of collectMarkdown(join(workspaceRoot, base))) {
+    for (const file of await collectFiles(join(workspaceRoot, base), {
+      extensions: [".md"],
+    })) {
       const name = file.split("/").pop() ?? "";
       const m = name.match(/^(rfc|adr)-(\d+)-.*\.md$/);
       if (!m) continue;
@@ -95,23 +86,15 @@ function resolveDecisionRef(
   return { ok: true };
 }
 
-/** Collect all YAML files directly inside <workspaceRoot>/<layerDir>/<subdir>. */
-function layerYamlFiles(ctx: KnowledgeContext, layerDir: string): string[] {
-  const root = join(ctx.workspaceRoot, layerDir);
-  if (!existsSync(root)) return [];
-  const out: string[] = [];
-  for (const entry of readdirSync(root, { withFileTypes: true, recursive: true })) {
-    if (entry.isFile() && entry.name.endsWith(".yaml")) {
-      out.push(join(entry.parentPath, entry.name));
-    }
-  }
-  return out;
+/** Collect all YAML files under <workspaceRoot>/<layerDir>. */
+async function layerYamlFiles(ctx: KnowledgeContext, layerDir: string): Promise<string[]> {
+  return collectFiles(join(ctx.workspaceRoot, layerDir), { extensions: [".yaml"] });
 }
 
 export const auditService: AuditService = {
   async audit(ctx: KnowledgeContext): Promise<VerificationViolation[]> {
     const violations: VerificationViolation[] = [];
-    const decisionIndex = buildDecisionIndex(ctx.workspaceRoot);
+    const decisionIndex = await buildDecisionIndex(ctx.workspaceRoot);
 
     // KNO-016 — governanceLog decisionRefs resolve to accepted/implemented decisions
     const registryPath = join(ctx.workspaceRoot, KNOWLEDGE_PATHS.schemaRegistry);
@@ -135,7 +118,7 @@ export const auditService: AuditService = {
     // decisionRef is a simple scalar field; a regex scan over canonical YAML
     // is sufficient and avoids re-parsing records already loaded by verify.
     if (existsSync(join(ctx.workspaceRoot, KNOWLEDGE_PATHS.contentDir))) {
-      for (const file of layerYamlFiles(ctx, KNOWLEDGE_PATHS.contentDir)) {
+      for (const file of await layerYamlFiles(ctx, KNOWLEDGE_PATHS.contentDir)) {
         const relPath = relative(ctx.workspaceRoot, file);
         const text = readFileSync(file, "utf-8");
         for (const m of text.matchAll(/decisionRef:\s*["']?([A-Z]+-\d+)["']?/g)) {
@@ -153,7 +136,7 @@ export const auditService: AuditService = {
       [KNOWLEDGE_PATHS.stagingDir, "error"],
       [KNOWLEDGE_PATHS.laboratoryDir, "warning"],
     ] as const) {
-      for (const file of layerYamlFiles(ctx, layerDir)) {
+      for (const file of await layerYamlFiles(ctx, layerDir)) {
         const relPath = relative(ctx.workspaceRoot, file);
         const text = readFileSync(file, "utf-8");
         for (const { name, pattern } of SECRET_PATTERNS) {
