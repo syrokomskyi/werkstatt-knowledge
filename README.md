@@ -86,6 +86,9 @@ Key invariant groups:
 ```text
 src/
   index.ts                    # Plugin entry — werkstattKnowledgePlugin
+  commands/                   # KNOWLEDGE_COMMANDS manifest (RFC-1098)
+  schemas/                    # Canonical record + ontology registry Zod schemas (RFC-1107)
+  services/                   # Domain service layer (RFC-1098)
   paths/                      # Knowledge path conventions
   invariants/                 # KNO-001..028 stack invariant declarations
   source/                     # knowledge-source module (scan, status, bind, verify)
