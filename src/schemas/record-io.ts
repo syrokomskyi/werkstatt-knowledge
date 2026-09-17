@@ -14,7 +14,10 @@
 
 import { readFile } from "node:fs/promises";
 import { parse as parseYaml } from "yaml";
-import type { Diagnostic } from "@warpgogol/werkstatt-engine/schemas";
+import {
+  safeWorkspaceRelativePathSchema,
+  type Diagnostic,
+} from "@warpgogol/werkstatt-engine/schemas";
 import type { z } from "zod";
 import {
   recordSchemasFor,
@@ -37,22 +40,13 @@ export interface RecordLoadFailure {
 
 export type RecordLoadResult<T> = RecordLoadSuccess<T> | RecordLoadFailure;
 
-function isSafeRelativePath(value: string): boolean {
-  return (
-    value.length > 0 &&
-    !value.startsWith("/") &&
-    !value.includes("\\") &&
-    !value.split("/").some((seg) => seg === "" || seg === "." || seg === "..")
-  );
-}
-
 function makeDiagnostic(ruleId: string, filePath: string, message: string): Diagnostic {
   const diagnostic: Diagnostic = {
     severity: "error",
     ruleId,
     message: `${filePath}: ${message}`,
   };
-  if (isSafeRelativePath(filePath)) {
+  if (safeWorkspaceRelativePathSchema.safeParse(filePath).success) {
     diagnostic.file = filePath;
     diagnostic.evidence = [{ kind: "source", file: filePath }];
   }

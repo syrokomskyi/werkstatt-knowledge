@@ -15,7 +15,8 @@
 
 import { z } from "zod";
 
-const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const SLUG_SOURCE = "[a-z0-9]+(-[a-z0-9]+)*";
+const SLUG_PATTERN = new RegExp(`^${SLUG_SOURCE}$`);
 const FINGERPRINT_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const DECISION_REF_PATTERN = /^(RFC|ADR)-\d+$/;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
@@ -37,12 +38,14 @@ export function recordIdSchema(type: KnowledgeRecordType) {
   return z
     .string()
     .regex(
-      new RegExp(`^${type}:${SLUG_PATTERN.source.slice(1, -1)}$`),
+      new RegExp(`^${type}:${SLUG_SOURCE}$`),
       `record id must be "${type}:<slug>" (lowercase alphanumerics and hyphens)`,
     );
 }
 
-export const slugSchema = z.string().regex(SLUG_PATTERN, "slug must be lowercase alphanumerics and hyphens");
+export const slugSchema = z
+  .string()
+  .regex(SLUG_PATTERN, "slug must be lowercase alphanumerics and hyphens");
 
 export const fingerprintSchema = z
   .string()
@@ -123,8 +126,16 @@ export const evidenceRecordSchema = z.strictObject({
   sourceUnit: z.string().min(1),
   locator: z.strictObject({
     path: z.string().min(1),
-    lines: z.tuple([z.number().int().positive(), z.number().int().positive()]).optional(),
-    commit: z.string().regex(/^[0-9a-f]{7,40}$/, "commit must be a git sha").optional(),
+    lines: z
+      .tuple([z.number().int().positive(), z.number().int().positive()])
+      .refine(([start, end]) => start <= end, {
+        message: "lines range must be ordered (start <= end)",
+      })
+      .optional(),
+    commit: z
+      .string()
+      .regex(/^[0-9a-f]{7,40}$/, "commit must be a git sha")
+      .optional(),
   }),
   fingerprint: fingerprintSchema,
   excerptPolicy: z.enum(["public", "restricted", "private"]),

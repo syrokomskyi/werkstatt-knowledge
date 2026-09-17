@@ -221,45 +221,52 @@ describe("canonical record schemas (RFC-1107)", () => {
 });
 
 describe("record-io loaders (RFC-1107)", () => {
-  let dir: string;
-
   it("loadRecordFile returns typed record for valid YAML", async () => {
-    dir = await mkdtemp(join(tmpdir(), "knowledge-io-"));
-    const file = join(dir, "permadeath.yaml");
-    await writeFile(file, toYaml(validEntity), "utf8");
-    const result = await loadRecordFile(file, "entity", "canonical");
-    expect(result.ok).toBe(true);
-    await rm(dir, { recursive: true, force: true });
+    const dir = await mkdtemp(join(tmpdir(), "knowledge-io-"));
+    try {
+      const file = join(dir, "permadeath.yaml");
+      await writeFile(file, toYaml(validEntity), "utf8");
+      const result = await loadRecordFile(file, "entity", "canonical");
+      expect(result.ok).toBe(true);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   it("loadRecordFile distinguishes YAML parse errors from KNO-007 schema violations", async () => {
-    dir = await mkdtemp(join(tmpdir(), "knowledge-io-"));
-    const badYaml = join(dir, "bad.yaml");
-    await writeFile(badYaml, "key: [unclosed\n  - broken", "utf8");
-    const yamlResult = await loadRecordFile(badYaml, "entity", "canonical");
-    expect(yamlResult.ok).toBe(false);
-    expect(yamlResult.diagnostics[0].ruleId).toBe("KNO-IO-YAML");
+    const dir = await mkdtemp(join(tmpdir(), "knowledge-io-"));
+    try {
+      const badYaml = join(dir, "bad.yaml");
+      await writeFile(badYaml, "key: [unclosed\n  - broken", "utf8");
+      const yamlResult = await loadRecordFile(badYaml, "entity", "canonical");
+      expect(yamlResult.ok).toBe(false);
+      expect(yamlResult.diagnostics[0].ruleId).toBe("KNO-IO-YAML");
 
-    const badSchema = join(dir, "wrong.yaml");
-    await writeFile(badSchema, toYaml({ schema: "knowledge/entity@1", id: "wrong" }), "utf8");
-    const schemaResult = await loadRecordFile(badSchema, "entity", "canonical");
-    expect(schemaResult.ok).toBe(false);
-    expect(schemaResult.diagnostics[0].ruleId).toBe("KNO-007");
-    await rm(dir, { recursive: true, force: true });
+      const badSchema = join(dir, "wrong.yaml");
+      await writeFile(badSchema, toYaml({ schema: "knowledge/entity@1", id: "wrong" }), "utf8");
+      const schemaResult = await loadRecordFile(badSchema, "entity", "canonical");
+      expect(schemaResult.ok).toBe(false);
+      expect(schemaResult.diagnostics[0].ruleId).toBe("KNO-007");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   it("loadRegistry fails closed on missing file and validates a real registry", async () => {
-    dir = await mkdtemp(join(tmpdir(), "knowledge-io-"));
-    const missing = await loadRegistry(join(dir, "absent.yaml"));
-    expect(missing.ok).toBe(false);
-    expect(missing.diagnostics[0].severity).toBe("error");
+    const dir = await mkdtemp(join(tmpdir(), "knowledge-io-"));
+    try {
+      const missing = await loadRegistry(join(dir, "absent.yaml"));
+      expect(missing.ok).toBe(false);
+      expect(missing.diagnostics[0].severity).toBe("error");
 
-    const file = join(dir, "schema-registry.yaml");
-    await writeFile(file, toYaml(validRegistry), "utf8");
-    const loaded = await loadRegistry(file);
-    expect(loaded.ok).toBe(true);
-    if (loaded.ok) expect(loaded.record.relationTypes).toHaveLength(2);
-    await rm(dir, { recursive: true, force: true });
+      const file = join(dir, "schema-registry.yaml");
+      await writeFile(file, toYaml(validRegistry), "utf8");
+      const loaded = await loadRegistry(file);
+      expect(loaded.ok).toBe(true);
+      if (loaded.ok) expect(loaded.record.relationTypes).toHaveLength(2);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
 
