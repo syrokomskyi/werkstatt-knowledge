@@ -22,9 +22,11 @@ Sweep batch 4: 73 Compass headers on headerless engine files (certification, com
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { parse as parseYaml } from "yaml";
 import type { KnowledgeContext } from "./context.ts";
 import { loadRecordFile, loadRegistry } from "../schemas/record-io.ts";
 import { knowledgeManifestSchema } from "../schemas/canonical-records.ts";
+import type { SchemaRegistry } from "../schemas/ontology-registry.ts";
 import { sourceService, type SourceDrift, type SourceUnit } from "./source.ts";
 import { KNOWLEDGE_PATHS } from "../paths/knowledge-paths.ts";
 
@@ -47,8 +49,11 @@ export interface KnowledgeStatus {
 
 export interface VerificationService {
   verify(ctx: KnowledgeContext, scope?: VerificationScope): Promise<VerificationViolation[]>;
-  checkEvidence(ctx: KnowledgeContext): Promise<VerificationViolation[]>;
-  checkRelations(ctx: KnowledgeContext): Promise<VerificationViolation[]>;
+  checkEvidence(ctx: KnowledgeContext, scope?: VerificationScope): Promise<VerificationViolation[]>;
+  checkRelations(
+    ctx: KnowledgeContext,
+    scope?: VerificationScope,
+  ): Promise<VerificationViolation[]>;
   status(ctx: KnowledgeContext): Promise<KnowledgeStatus>;
 }
 
@@ -65,9 +70,13 @@ const NON_ASCII_LANGUAGE_PATTERN = /[\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC
 interface LoadedRecord {
   type: string;
   layerDir: string;
-  filePath: string;
   relPath: string;
   record: Record<string, unknown>;
+}
+
+interface LayerScan {
+  records: LoadedRecord[];
+  violations: VerificationViolation[];
 }
 
 async function scanLayer(
@@ -105,13 +114,44 @@ async function scanLayer(
       records.push({
         type,
         layerDir,
-        filePath,
         relPath,
         record: result.record as Record<string, unknown>,
       });
     }
   }
   return { records, violations };
+}
+
+interface AllLayerScans {
+  canonical: LayerScan;
+  staging: LayerScan;
+  laboratory: LayerScan;
+}
+
+async function scanAllLayers(ctx: KnowledgeContext): Promise<AllLayerScans> {
+  const canonical = await scanLayer(ctx, KNOWLEDGE_PATHS.contentDir);
+  const staging = await scanLayer(ctx, KNOWLEDGE_PATHS.stagingDir);
+  const laboratory = await scanLayer(ctx, KNOWLEDGE_PATHS.laboratoryDir);
+  return { canonical, staging, laboratory };
+}
+
+/**
+ * Subject = records under check; pool = records available for reference
+ * resolution. Candidates may legitimately reference canonical records, so the
+ * candidates pool includes all three layers; the canonical pool is canonical
+ * only (staging/laboratory references surface as KNO-014/015).
+ */
+function scopeSets(
+  scans: AllLayerScans,
+  scope: VerificationScope,
+): { subject: LoadedRecord[]; pool: LoadedRecord[] } {
+  if (scope === "canonical") {
+    return { subject: scans.canonical.records, pool: scans.canonical.records };
+  }
+  return {
+    subject: [...scans.staging.records, ...scans.laboratory.records],
+    pool: [...scans.canonical.records, ...scans.staging.records, ...scans.laboratory.records],
+  };
 }
 
 function violation(
@@ -137,7 +177,7 @@ function collectRefs(record: Record<string, unknown>): string[] {
   return refs;
 }
 
-function checkEpistemic(records: LoadedRecord[], layerDir: string): VerificationViolation[] {
+function checkEpistemic(records: LoadedRecord[]): VerificationViolation[] {
   const violations: VerificationViolation[] = [];
   const checkStatus = (status: unknown, where: string, path: string) => {
     if (status === "draft" || status === "speculative") {
@@ -147,7 +187,6 @@ function checkEpistemic(records: LoadedRecord[], layerDir: string): Verification
     }
   };
   for (const r of records) {
-    if (r.layerDir !== layerDir) continue;
     checkStatus(r.record.epistemicStatus, `${r.record.id}`, r.relPath);
     const claims = r.record.claims as { id?: string; epistemicStatus?: string }[] | undefined;
     if (Array.isArray(claims)) {
@@ -194,16 +233,12 @@ export const verificationService: VerificationService = {
   ): Promise<VerificationViolation[]> {
     const violations: VerificationViolation[] = [];
 
-    const canonical = await scanLayer(ctx, KNOWLEDGE_PATHS.contentDir);
-    const staging = await scanLayer(ctx, KNOWLEDGE_PATHS.stagingDir);
-    const laboratory = await scanLayer(ctx, KNOWLEDGE_PATHS.laboratoryDir);
-
-    const scopeRecords =
-      scope === "canonical" ? canonical.records : [...staging.records, ...laboratory.records];
+    const scans = await scanAllLayers(ctx);
+    const { subject: scopeRecords } = scopeSets(scans, scope);
     const scopeViolations =
       scope === "canonical"
-        ? [...canonical.violations]
-        : [...staging.violations, ...laboratory.violations];
+        ? [...scans.canonical.violations]
+        : [...scans.staging.violations, ...scans.laboratory.violations];
     violations.push(...scopeViolations);
 
     // KNO-001 — manifest (canonical scope only)
@@ -213,8 +248,7 @@ export const verificationService: VerificationService = {
         violations.push(violation("KNO-001", `${KNOWLEDGE_PATHS.manifest}: manifest missing`));
       } else {
         try {
-          const { parse } = await import("yaml");
-          const data = parse(readFileSync(manifestPath, "utf-8"));
+          const data = parseYaml(readFileSync(manifestPath, "utf-8"));
           const parsed = knowledgeManifestSchema.safeParse(data);
           if (!parsed.success) {
             for (const issue of parsed.error.issues) {
@@ -272,8 +306,8 @@ export const verificationService: VerificationService = {
       }
     }
 
-    // KNO-009 — evidence resolution + fingerprint re-verification
-    violations.push(...(await verificationService.checkEvidence(ctx)));
+    // KNO-009 — evidence resolution + fingerprint re-verification (scope-aware)
+    violations.push(...(await evidenceViolations(ctx, scans, scope)));
 
     // KNO-010 — claim support
     for (const r of scopeRecords) {
@@ -314,12 +348,12 @@ export const verificationService: VerificationService = {
       }
     }
 
-    // KNO-011 — relation ontology
-    violations.push(...(await verificationService.checkRelations(ctx)));
+    // KNO-011 — relation ontology (scope-aware)
+    violations.push(...(await relationViolations(ctx, scans, scope)));
 
     // KNO-012 — epistemic status
     if (scope === "canonical") {
-      violations.push(...checkEpistemic(canonical.records, KNOWLEDGE_PATHS.contentDir));
+      violations.push(...checkEpistemic(scans.canonical.records));
     } else {
       // candidates scope: draft/speculative allowed but flagged as promotion-blockers
       for (const r of scopeRecords) {
@@ -349,15 +383,15 @@ export const verificationService: VerificationService = {
 
     // KNO-013 — canonical English (canonical scope only)
     if (scope === "canonical") {
-      violations.push(...checkEnglish(canonical.records));
+      violations.push(...checkEnglish(scans.canonical.records));
     }
 
     // KNO-014/015 — canonical records must not reference staging/laboratory ids
     if (scope === "canonical") {
-      const stagingIds = new Set(staging.records.map((r) => r.record.id as string));
-      const labIds = new Set(laboratory.records.map((r) => r.record.id as string));
-      const canonicalIds = new Set(canonical.records.map((r) => r.record.id as string));
-      for (const r of canonical.records) {
+      const stagingIds = new Set(scans.staging.records.map((r) => r.record.id as string));
+      const labIds = new Set(scans.laboratory.records.map((r) => r.record.id as string));
+      const canonicalIds = new Set(scans.canonical.records.map((r) => r.record.id as string));
+      for (const r of scans.canonical.records) {
         for (const ref of collectRefs(r.record)) {
           if (canonicalIds.has(ref)) continue;
           if (stagingIds.has(ref)) {
@@ -425,160 +459,31 @@ export const verificationService: VerificationService = {
     return violations;
   },
 
-  async checkEvidence(ctx: KnowledgeContext): Promise<VerificationViolation[]> {
-    const violations: VerificationViolation[] = [];
-    const canonical = await scanLayer(ctx, KNOWLEDGE_PATHS.contentDir);
-    const evidenceById = new Map<string, LoadedRecord>();
-    for (const r of canonical.records) {
-      if (r.type === "evidence") evidenceById.set(r.record.id as string, r);
-    }
-
-    const units = sourceService.scanUnits(ctx);
-    const unitById = new Map<string, SourceUnit>(units.map((u) => [u.id, u]));
-    const sourceRoot = sourceService.resolveRoot(ctx);
-
-    // every evidence:* reference resolves
-    for (const r of canonical.records) {
-      for (const ref of collectRefs(r.record)) {
-        if (!ref.startsWith("evidence:")) continue;
-        if (!evidenceById.has(ref)) {
-          violations.push(
-            violation(
-              "KNO-009",
-              `${r.record.id}: evidence reference "${ref}" does not resolve`,
-              r.relPath,
-            ),
-          );
-        }
-      }
-    }
-
-    // each evidence record's fingerprint re-verified against located content
-    for (const [id, r] of evidenceById) {
-      const rec = r.record as {
-        sourceUnit: string;
-        locator: { path: string; lines?: [number, number] };
-        fingerprint: string;
-      };
-      const unit = unitById.get(rec.sourceUnit);
-      if (!sourceRoot || !unit) {
-        violations.push(
-          violation(
-            "KNO-009",
-            `${id}: source unit "${rec.sourceUnit}" not resolvable — evidence unverifiable`,
-            r.relPath,
-            "warning",
-          ),
-        );
-        continue;
-      }
-      const actual = sourceService.fingerprintAt(ctx, unit, rec.locator);
-      if (actual === null) {
-        violations.push(
-          violation(
-            "KNO-009",
-            `${id}: located content "${rec.locator.path}" unreadable in unit "${rec.sourceUnit}"`,
-            r.relPath,
-            "warning",
-          ),
-        );
-        continue;
-      }
-      if (actual !== rec.fingerprint) {
-        violations.push(
-          violation(
-            "KNO-009",
-            `${id}: fingerprint mismatch — located content changed since binding`,
-            r.relPath,
-          ),
-        );
-      }
-    }
-    return violations;
+  async checkEvidence(
+    ctx: KnowledgeContext,
+    scope: VerificationScope = "canonical",
+  ): Promise<VerificationViolation[]> {
+    const scans = await scanAllLayers(ctx);
+    return evidenceViolations(ctx, scans, scope);
   },
 
-  async checkRelations(ctx: KnowledgeContext): Promise<VerificationViolation[]> {
-    const violations: VerificationViolation[] = [];
-    const canonical = await scanLayer(ctx, KNOWLEDGE_PATHS.contentDir);
-    const registryPath = join(ctx.workspaceRoot, KNOWLEDGE_PATHS.schemaRegistry);
-    const regResult = await loadRegistry(registryPath);
-    if (!regResult.ok) {
-      for (const d of regResult.diagnostics) {
-        violations.push(violation(d.ruleId, d.message, KNOWLEDGE_PATHS.schemaRegistry));
-      }
-      return violations;
-    }
-    const registry = regResult.record;
-    const relTypes = new Map(registry.relationTypes.map((t) => [t.id, t]));
-    const entityKindById = new Map<string, string>();
-    for (const r of canonical.records) {
-      if (r.type === "entity") entityKindById.set(r.record.id as string, r.record.kind as string);
-    }
-    for (const r of canonical.records) {
-      if (r.type !== "relation") continue;
-      const rec = r.record as { id: string; type: string; from: string; to: string };
-      const relType = relTypes.get(rec.type);
-      if (!relType) {
-        violations.push(
-          violation(
-            "KNO-011",
-            `${rec.id}: relation type "${rec.type}" is not registered in schema-registry.yaml`,
-            r.relPath,
-          ),
-        );
-        continue;
-      }
-      const fromKind = entityKindById.get(rec.from);
-      const toKind = entityKindById.get(rec.to);
-      if (fromKind === undefined) {
-        violations.push(
-          violation(
-            "KNO-011",
-            `${rec.id}: "from" entity "${rec.from}" does not resolve to a canonical entity`,
-            r.relPath,
-          ),
-        );
-      } else if (!relType.domain.includes(fromKind)) {
-        violations.push(
-          violation(
-            "KNO-011",
-            `${rec.id}: "from" kind "${fromKind}" not in domain of "${rec.type}" (${relType.domain.join(", ")})`,
-            r.relPath,
-          ),
-        );
-      }
-      if (toKind === undefined) {
-        violations.push(
-          violation(
-            "KNO-011",
-            `${rec.id}: "to" entity "${rec.to}" does not resolve to a canonical entity`,
-            r.relPath,
-          ),
-        );
-      } else if (!relType.range.includes(toKind)) {
-        violations.push(
-          violation(
-            "KNO-011",
-            `${rec.id}: "to" kind "${toKind}" not in range of "${rec.type}" (${relType.range.join(", ")})`,
-            r.relPath,
-          ),
-        );
-      }
-    }
-    return violations;
+  async checkRelations(
+    ctx: KnowledgeContext,
+    scope: VerificationScope = "canonical",
+  ): Promise<VerificationViolation[]> {
+    const scans = await scanAllLayers(ctx);
+    return relationViolations(ctx, scans, scope);
   },
 
   async status(ctx: KnowledgeContext): Promise<KnowledgeStatus> {
-    const canonical = await scanLayer(ctx, KNOWLEDGE_PATHS.contentDir);
-    const staging = await scanLayer(ctx, KNOWLEDGE_PATHS.stagingDir);
-    const laboratory = await scanLayer(ctx, KNOWLEDGE_PATHS.laboratoryDir);
+    const scans = await scanAllLayers(ctx);
 
     const recordCounts: Record<string, number> = {};
     const layerCounts: Record<string, number> = {};
     for (const [layer, scanned] of [
-      [KNOWLEDGE_PATHS.contentDir, canonical],
-      [KNOWLEDGE_PATHS.stagingDir, staging],
-      [KNOWLEDGE_PATHS.laboratoryDir, laboratory],
+      [KNOWLEDGE_PATHS.contentDir, scans.canonical],
+      [KNOWLEDGE_PATHS.stagingDir, scans.staging],
+      [KNOWLEDGE_PATHS.laboratoryDir, scans.laboratory],
     ] as const) {
       layerCounts[layer] = scanned.records.length;
       for (const r of scanned.records) {
@@ -602,7 +507,162 @@ export const verificationService: VerificationService = {
       layerCounts,
       registry,
       sourceDrift,
-      pendingCandidates: staging.records.length + laboratory.records.length,
+      pendingCandidates: scans.staging.records.length + scans.laboratory.records.length,
     };
   },
 };
+
+/** KNO-009 — evidence refs in subject records resolve against pool; subject evidence fingerprints re-verified. */
+async function evidenceViolations(
+  ctx: KnowledgeContext,
+  scans: AllLayerScans,
+  scope: VerificationScope,
+): Promise<VerificationViolation[]> {
+  const violations: VerificationViolation[] = [];
+  const { subject, pool } = scopeSets(scans, scope);
+  const evidenceById = new Map<string, LoadedRecord>();
+  for (const r of pool) {
+    if (r.type === "evidence") evidenceById.set(r.record.id as string, r);
+  }
+
+  const units = sourceService.scanUnits(ctx);
+  const unitById = new Map<string, SourceUnit>(units.map((u) => [u.id, u]));
+  const sourceRoot = sourceService.resolveRoot(ctx);
+
+  // every evidence:* reference resolves
+  for (const r of subject) {
+    for (const ref of collectRefs(r.record)) {
+      if (!ref.startsWith("evidence:")) continue;
+      if (!evidenceById.has(ref)) {
+        violations.push(
+          violation(
+            "KNO-009",
+            `${r.record.id}: evidence reference "${ref}" does not resolve`,
+            r.relPath,
+          ),
+        );
+      }
+    }
+  }
+
+  // each in-scope evidence record's fingerprint re-verified against located content
+  for (const r of subject) {
+    if (r.type !== "evidence") continue;
+    const id = r.record.id as string;
+    const rec = r.record as {
+      sourceUnit: string;
+      locator: { path: string; lines?: [number, number] };
+      fingerprint: string;
+    };
+    const unit = unitById.get(rec.sourceUnit);
+    if (!sourceRoot || !unit) {
+      violations.push(
+        violation(
+          "KNO-009",
+          `${id}: source unit "${rec.sourceUnit}" not resolvable — evidence unverifiable`,
+          r.relPath,
+          "warning",
+        ),
+      );
+      continue;
+    }
+    const actual = sourceService.fingerprintAt(ctx, unit, rec.locator);
+    if (actual === null) {
+      violations.push(
+        violation(
+          "KNO-009",
+          `${id}: located content "${rec.locator.path}" unreadable in unit "${rec.sourceUnit}"`,
+          r.relPath,
+          "warning",
+        ),
+      );
+      continue;
+    }
+    if (actual !== rec.fingerprint) {
+      violations.push(
+        violation(
+          "KNO-009",
+          `${id}: fingerprint mismatch — located content changed since binding`,
+          r.relPath,
+        ),
+      );
+    }
+  }
+  return violations;
+}
+
+/** KNO-011 — subject relation types registered; from/to resolve to entities in pool with valid domain/range. */
+async function relationViolations(
+  ctx: KnowledgeContext,
+  scans: AllLayerScans,
+  scope: VerificationScope,
+): Promise<VerificationViolation[]> {
+  const violations: VerificationViolation[] = [];
+  const { subject, pool } = scopeSets(scans, scope);
+  const registryPath = join(ctx.workspaceRoot, KNOWLEDGE_PATHS.schemaRegistry);
+  const regResult = await loadRegistry(registryPath);
+  if (!regResult.ok) {
+    for (const d of regResult.diagnostics) {
+      violations.push(violation(d.ruleId, d.message, KNOWLEDGE_PATHS.schemaRegistry));
+    }
+    return violations;
+  }
+  const registry: SchemaRegistry = regResult.record;
+  const relTypes = new Map(registry.relationTypes.map((t) => [t.id, t]));
+  const entityKindById = new Map<string, string>();
+  for (const r of pool) {
+    if (r.type === "entity") entityKindById.set(r.record.id as string, r.record.kind as string);
+  }
+  for (const r of subject) {
+    if (r.type !== "relation") continue;
+    const rec = r.record as { id: string; type: string; from: string; to: string };
+    const relType = relTypes.get(rec.type);
+    if (!relType) {
+      violations.push(
+        violation(
+          "KNO-011",
+          `${rec.id}: relation type "${rec.type}" is not registered in schema-registry.yaml`,
+          r.relPath,
+        ),
+      );
+      continue;
+    }
+    const fromKind = entityKindById.get(rec.from);
+    const toKind = entityKindById.get(rec.to);
+    if (fromKind === undefined) {
+      violations.push(
+        violation(
+          "KNO-011",
+          `${rec.id}: "from" entity "${rec.from}" does not resolve to a canonical entity`,
+          r.relPath,
+        ),
+      );
+    } else if (!relType.domain.includes(fromKind)) {
+      violations.push(
+        violation(
+          "KNO-011",
+          `${rec.id}: "from" kind "${fromKind}" not in domain of "${rec.type}" (${relType.domain.join(", ")})`,
+          r.relPath,
+        ),
+      );
+    }
+    if (toKind === undefined) {
+      violations.push(
+        violation(
+          "KNO-011",
+          `${rec.id}: "to" entity "${rec.to}" does not resolve to a canonical entity`,
+          r.relPath,
+        ),
+      );
+    } else if (!relType.range.includes(toKind)) {
+      violations.push(
+        violation(
+          "KNO-011",
+          `${rec.id}: "to" kind "${toKind}" not in range of "${rec.type}" (${relType.range.join(", ")})`,
+          r.relPath,
+        ),
+      );
+    }
+  }
+  return violations;
+}

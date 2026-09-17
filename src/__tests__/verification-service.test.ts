@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { verificationService } from "../services/verification.ts";
@@ -211,6 +211,62 @@ describe("verificationService.checkEvidence", () => {
 });
 
 describe("verificationService.verify (candidates)", () => {
+  it("staging record with unresolvable evidence ref → KNO-009 (scope-aware)", async () => {
+    makeKbWorkspace(workspaceDir);
+    writeEntity(workspaceDir, "cand", {
+      layer: "staging",
+      claims:
+        '[{ id: "c1", field: "f", value: "v", provenance: "asserted", epistemicStatus: "draft", evidence: ["evidence:missing"] }]',
+    });
+    const ctx = resolveKnowledgeContext(workspaceDir);
+    const violations = await verificationService.verify(ctx, "candidates");
+    expect(ruleIds(violations)).toContain("KNO-009");
+  });
+
+  it("staging relation with unregistered type → KNO-011 (scope-aware)", async () => {
+    makeKbWorkspace(workspaceDir);
+    writeEntity(workspaceDir, "cand", { layer: "staging" });
+    writeYaml(
+      join(workspaceDir, "staging", "relations"),
+      "rel.yaml",
+      [
+        'schema: "knowledge/relation@1"',
+        'id: "relation:cand-r1"',
+        'type: "unregistered-type"',
+        'from: "entity:cand"',
+        'to: "entity:cand"',
+        'epistemicStatus: "draft"',
+        "evidence: []",
+        "",
+      ].join("\n"),
+    );
+    const ctx = resolveKnowledgeContext(workspaceDir);
+    const violations = await verificationService.verify(ctx, "candidates");
+    expect(ruleIds(violations)).toContain("KNO-011");
+  });
+
+  it("staging relation to canonical entity resolves (pool includes canonical)", async () => {
+    makeKbWorkspace(workspaceDir);
+    writeEntity(workspaceDir, "alpha");
+    writeYaml(
+      join(workspaceDir, "staging", "relations"),
+      "rel.yaml",
+      [
+        'schema: "knowledge/relation@1"',
+        'id: "relation:cand-r1"',
+        'type: "related-to"',
+        'from: "entity:alpha"',
+        'to: "entity:alpha"',
+        'epistemicStatus: "draft"',
+        "evidence: []",
+        "",
+      ].join("\n"),
+    );
+    const ctx = resolveKnowledgeContext(workspaceDir);
+    const violations = await verificationService.verify(ctx, "candidates");
+    expect(ruleIds(violations)).not.toContain("KNO-011");
+  });
+
   it("draft in staging → warning promotion-blocker, not error", async () => {
     makeKbWorkspace(workspaceDir);
     writeEntity(workspaceDir, "cand", {
