@@ -45,6 +45,10 @@ src/
   index.ts                          # Plugin entry — werkstattKnowledgePlugin
   commands/
     knowledge-commands.ts           # KNOWLEDGE_COMMANDS manifest + declareKnowledgeCommand + buildModule
+  schemas/
+    canonical-records.ts            # RFC-1107 — Zod schemas for 5 record types + Claim + knowledge/manifest@1, recordSchemasFor(layer)
+    ontology-registry.ts            # RFC-1107 — knowledge/schema-registry@1 schema incl. inverse-pair consistency
+    record-io.ts                    # RFC-1107 — YAML load/parse helpers returning Diagnostics, never throws
   services/
     context.ts                      # KnowledgeContext, resolveKnowledgeContext, KnowledgeConfigError, NotImplementedError
     source.ts                       # SourceService — resolveRoot, scanUnits, fingerprint, compareBindings (implemented)

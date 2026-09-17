@@ -32,7 +32,16 @@ describe("runKnowledgeScaffoldProject", () => {
     const result = await runKnowledgeScaffoldProject(makeCtx(projectPath, "test-kb"));
     expect(result.success).toBe(true);
 
-    for (const dir of ["knowledge/ontology", "staging", "laboratory", "projections", "apps", "packages", "docs/rfc", "docs/adr"]) {
+    for (const dir of [
+      "knowledge/ontology",
+      "staging",
+      "laboratory",
+      "projections",
+      "apps",
+      "packages",
+      "docs/rfc",
+      "docs/adr",
+    ]) {
       await expect(access(join(projectPath, dir))).resolves.toBeUndefined();
     }
   });
@@ -46,8 +55,34 @@ describe("runKnowledgeScaffoldProject", () => {
 
   it("creates knowledge/ontology/schema-registry.yaml", async () => {
     await runKnowledgeScaffoldProject(makeCtx(projectPath));
-    const content = await readFile(join(projectPath, "knowledge", "ontology", "schema-registry.yaml"), "utf-8");
-    expect(content).toContain("schemas: []");
+    const content = await readFile(
+      join(projectPath, "knowledge", "ontology", "schema-registry.yaml"),
+      "utf-8",
+    );
+    expect(content).toContain("schema: knowledge/schema-registry@1");
+  });
+
+  it("AC-6: emitted manifest and registry skeletons parse against the canonical schemas", async () => {
+    const { parse } = await import("yaml");
+    const { knowledgeManifestSchema } = await import("../schemas/canonical-records.ts");
+    const { schemaRegistrySchema } = await import("../schemas/ontology-registry.ts");
+
+    await runKnowledgeScaffoldProject(makeCtx(projectPath));
+    const manifest = parse(
+      await readFile(join(projectPath, "knowledge", "manifest.yaml"), "utf-8"),
+    );
+    const registry = parse(
+      await readFile(join(projectPath, "knowledge", "ontology", "schema-registry.yaml"), "utf-8"),
+    );
+
+    expect(
+      knowledgeManifestSchema.safeParse(manifest).success,
+      "scaffolded manifest.yaml must conform to knowledge/manifest@1",
+    ).toBe(true);
+    expect(
+      schemaRegistrySchema.safeParse(registry).success,
+      "scaffolded schema-registry.yaml must conform to knowledge/schema-registry@1",
+    ).toBe(true);
   });
 
   it("creates knowledge.config.yaml", async () => {

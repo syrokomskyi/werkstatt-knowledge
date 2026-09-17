@@ -26,17 +26,25 @@ import { join } from "node:path";
 import { writeFileIfChanged } from "@warpgogol/werkstatt-engine/kernel";
 import type { PluginHookContext, HookResult } from "@warpgogol/werkstatt-shared/plugin";
 
-const MANIFEST_YAML = `# Knowledge manifest — canonical dataset identity
-id: ""
-name: ""
-modelVersion: "1.0.0"
+const MANIFEST_YAML = `# Knowledge manifest — canonical dataset identity (knowledge/manifest@1)
+schema: knowledge/manifest@1
+id: my-knowledge-base
+name: My Knowledge Base
+modelVersion: 1.0.0
 description: ""
 license: ""
 `;
 
-const SCHEMA_REGISTRY_YAML = `# Ontology schema registry
-# Register canonical record schemas here
-schemas: []
+const SCHEMA_REGISTRY_YAML = `# Ontology schema registry (knowledge/schema-registry@1)
+# relationTypes is a closed vocabulary: every entry needs domain, range, and a
+# registered inverse pair. entityKinds is open — extend per project.
+schema: knowledge/schema-registry@1
+relationTypes: []
+entityKinds: []
+epistemicVocabulary:
+  canonical: [verified, supported, contested, deprecated]
+  nonCanonical: [draft, speculative]
+governanceLog: []
 `;
 
 const CONFIG_YAML = `# Knowledge operational configuration
@@ -80,7 +88,8 @@ dist/
 
 export async function runKnowledgeScaffoldProject(ctx: PluginHookContext): Promise<HookResult> {
   const projectPath = ctx.workpiecePath ?? ctx.workspaceRoot;
-  const projectId = (ctx as PluginHookContext & { projectId?: string }).projectId ?? "my-knowledge-base";
+  const projectId =
+    (ctx as PluginHookContext & { projectId?: string }).projectId ?? "my-knowledge-base";
 
   ctx.logger.info(`scaffold-project: creating knowledge project at ${projectPath}`);
 
@@ -95,7 +104,10 @@ export async function runKnowledgeScaffoldProject(ctx: PluginHookContext): Promi
     await mkdir(join(projectPath, "docs", "adr"), { recursive: true });
 
     await writeFileIfChanged(join(projectPath, "knowledge", "manifest.yaml"), MANIFEST_YAML);
-    await writeFileIfChanged(join(projectPath, "knowledge", "ontology", "schema-registry.yaml"), SCHEMA_REGISTRY_YAML);
+    await writeFileIfChanged(
+      join(projectPath, "knowledge", "ontology", "schema-registry.yaml"),
+      SCHEMA_REGISTRY_YAML,
+    );
     await writeFileIfChanged(join(projectPath, "knowledge.config.yaml"), CONFIG_YAML);
     await writeFileIfChanged(join(projectPath, "turbo.json"), TURBO_JSON);
     await writeFileIfChanged(join(projectPath, "pnpm-workspace.yaml"), PNPM_WORKSPACE_YAML);
