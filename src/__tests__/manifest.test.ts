@@ -78,13 +78,12 @@ describe("KNOWLEDGE_COMMANDS manifest", () => {
 
 describe("declareKnowledgeCommand", () => {
   it("returns pending result for commands without loader", async () => {
-    const entry = KNOWLEDGE_COMMANDS.find((c) => c.name === "knowledge.verify")!;
+    const entry = KNOWLEDGE_COMMANDS.find((c) => c.name === "knowledge.promote")!;
     const cmd = declareKnowledgeCommand(entry);
-    expect(cmd.name).toBe("knowledge.verify");
+    expect(cmd.name).toBe("knowledge.promote");
     expect(cmd.scope).toBe("workspace");
     expect(cmd.cacheable).toBe(false);
-    expect(cmd.contract).toBe("knowledge");
-    expect(cmd.rules).toContain("KNO-001");
+    expect(entry.invariants).toContain("KNO-026");
 
     const result = await cmd.execute({ argv: [], flags: {} }, {
       workspaceRoot: "/tmp/test",

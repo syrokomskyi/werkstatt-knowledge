@@ -51,8 +51,10 @@ src/
     record-io.ts                    # RFC-1107 — YAML load/parse helpers returning Diagnostics, never throws
   services/
     context.ts                      # KnowledgeContext, resolveKnowledgeContext, KnowledgeConfigError, NotImplementedError
-    source.ts                       # SourceService — resolveRoot, scanUnits, fingerprint, compareBindings (implemented)
-    verification.ts                 # VerificationService — skeleton (NotImplementedError)
+    source.ts                       # SourceService — resolveRoot, scanUnits, fingerprint, fingerprintAt, compareBindings (implemented)
+    verification.ts                 # VerificationService — verify/checkEvidence/checkRelations/status (implemented, RFC-1108)
+    audit.ts                        # AuditService — decisionRef resolution + secret scan (implemented, RFC-1108)
+    coverage.ts                     # CoverageService — denominator/verifier rules (implemented, RFC-1108)
     transaction.ts                  # TransactionService — skeleton (NotImplementedError)
     extractor-registry.ts           # ExtractorRegistryService — skeleton (NotImplementedError)
     materializer.ts                 # MaterializerService — skeleton (NotImplementedError)
@@ -69,6 +71,11 @@ src/
     verify.ts                       # knowledge.source.verify handler (delegates to SourceService)
   core/
     module.ts                       # knowledge-core module registration (manifest-driven)
+    verify.ts                       # knowledge.verify handler (delegates to VerificationService)
+    status.ts                       # knowledge.status handler (delegates to VerificationService)
+    coverage.ts                     # knowledge.coverage handler (delegates to CoverageService)
+    audit.ts                        # knowledge.audit handler (delegates to AuditService)
+    candidate-validate.ts           # knowledge.candidate.validate handler (candidates scope)
   extract/
     module.ts                       # knowledge-extract module registration (manifest-driven)
   materialize/

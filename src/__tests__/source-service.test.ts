@@ -90,13 +90,13 @@ describe("sourceService.fingerprint", () => {
 });
 
 describe("sourceService.compareBindings", () => {
-  it("returns drift entries for all units", () => {
+  it("returns drift entries for all units", async () => {
     const unitDir = join(sourceDir, "unit-a");
     mkdirSync(unitDir, { recursive: true });
     writeFileSync(join(unitDir, "README.md"), "# Test\n");
 
     const ctx = resolveKnowledgeContext(workspaceDir);
-    const drift = sourceService.compareBindings(ctx);
+    const drift = await sourceService.compareBindings(ctx);
     expect(drift).toHaveLength(1);
     expect(drift[0].unitId).toBe("unit-a");
     expect(drift[0].drift).toBe(false);

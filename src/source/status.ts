@@ -31,7 +31,7 @@ export async function run(
   ctx: KnowledgeContext,
   _input: KernelCommandInput,
 ): Promise<KernelCommandResult> {
-  const drift = sourceService.compareBindings(ctx);
+  const drift = await sourceService.compareBindings(ctx);
   const driftDetected = drift.some((d) => d.drift);
   return {
     data: {

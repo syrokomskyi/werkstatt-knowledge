@@ -134,6 +134,7 @@ export const KNOWLEDGE_COMMANDS: KnowledgeCommandEntry[] = [
       "KNO-023",
       "KNO-024",
     ],
+    loader: () => import("../core/verify.ts").then((m) => m),
   },
   {
     name: "knowledge.status",
@@ -144,6 +145,7 @@ export const KNOWLEDGE_COMMANDS: KnowledgeCommandEntry[] = [
     cacheable: false,
     reads: ["knowledge/**"],
     invariants: [],
+    loader: () => import("../core/status.ts").then((m) => m),
   },
   {
     name: "knowledge.coverage",
@@ -153,7 +155,10 @@ export const KNOWLEDGE_COMMANDS: KnowledgeCommandEntry[] = [
     scope: "workspace",
     cacheable: false,
     reads: ["knowledge/**"],
+    contract: "knowledge",
+    rules: ["KNO-018"],
     invariants: ["KNO-018"],
+    loader: () => import("../core/coverage.ts").then((m) => m),
   },
   {
     name: "knowledge.audit",
@@ -163,7 +168,10 @@ export const KNOWLEDGE_COMMANDS: KnowledgeCommandEntry[] = [
     scope: "workspace",
     cacheable: false,
     reads: ["knowledge/**"],
+    contract: "knowledge",
+    rules: ["KNO-016", "KNO-017", "KNO-020"],
     invariants: ["KNO-016", "KNO-017", "KNO-020"],
+    loader: () => import("../core/audit.ts").then((m) => m),
   },
   {
     name: "knowledge.candidate.validate",
@@ -176,6 +184,7 @@ export const KNOWLEDGE_COMMANDS: KnowledgeCommandEntry[] = [
     contract: "knowledge",
     rules: ["KNO-014", "KNO-015"],
     invariants: ["KNO-014", "KNO-015"],
+    loader: () => import("../core/candidate-validate.ts").then((m) => m),
   },
   {
     name: "knowledge.promote",

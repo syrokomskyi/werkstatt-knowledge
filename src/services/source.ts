@@ -9,6 +9,7 @@
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
+  <item>RFC-1108: fingerprintAt (located-content hashing for KNO-009) + real compareBindings reading knowledge/bindings/*.yaml.</item>
   <item>RFC-1098: initial SourceService implementation (resolveRoot, scanUnits, fingerprint, compareBindings).</item>
   <item>RFC-1097: step 6 — compass.migrate codemod run
 
@@ -38,11 +39,17 @@ export interface SourceDrift {
   drift: boolean;
 }
 
+export interface SourceLocator {
+  path: string;
+  lines?: [number, number];
+}
+
 export interface SourceService {
   resolveRoot(ctx: KnowledgeContext): string | null;
   scanUnits(ctx: KnowledgeContext): SourceUnit[];
   fingerprint(ctx: KnowledgeContext, unit: SourceUnit): string;
-  compareBindings(ctx: KnowledgeContext): SourceDrift[];
+  fingerprintAt(ctx: KnowledgeContext, unit: SourceUnit, locator: SourceLocator): string | null;
+  compareBindings(ctx: KnowledgeContext): Promise<SourceDrift[]>;
 }
 
 function findSourceRoot(workspaceRoot: string): string | null {
@@ -111,13 +118,47 @@ export const sourceService: SourceService = {
     return computeFingerprint(join(unit.path, "README.md"));
   },
 
-  compareBindings(ctx: KnowledgeContext): SourceDrift[] {
+  fingerprintAt(_ctx: KnowledgeContext, unit: SourceUnit, locator: SourceLocator): string | null {
+    const filePath = join(unit.path, locator.path);
+    let content: string;
+    try {
+      content = readFileSync(filePath, "utf-8");
+    } catch {
+      return null;
+    }
+    if (locator.lines) {
+      const [start, end] = locator.lines;
+      const lines = content.split("\n");
+      content = lines.slice(start - 1, end).join("\n");
+    }
+    const hash = createHash("sha256").update(content).digest("hex");
+    return `sha256:${hash}`;
+  },
+
+  async compareBindings(ctx: KnowledgeContext): Promise<SourceDrift[]> {
     const units = sourceService.scanUnits(ctx);
-    return units.map((unit) => ({
-      unitId: unit.id,
-      currentFingerprint: unit.fingerprint,
-      boundFingerprint: null,
-      drift: false,
-    }));
+    const bound = new Map<string, string>();
+
+    const bindingsDir = join(ctx.workspaceRoot, "knowledge", "bindings");
+    if (existsSync(bindingsDir)) {
+      const { loadRecordFile } = await import("../schemas/record-io.ts");
+      for (const entry of readdirSync(bindingsDir, { withFileTypes: true })) {
+        if (!entry.isFile() || !entry.name.endsWith(".yaml")) continue;
+        const result = await loadRecordFile(join(bindingsDir, entry.name), "binding", "canonical");
+        if (!result.ok) continue;
+        const record = result.record as { sourceUnit: string; fingerprint: string };
+        bound.set(record.sourceUnit, record.fingerprint);
+      }
+    }
+
+    return units.map((unit) => {
+      const boundFingerprint = bound.get(unit.id) ?? null;
+      return {
+        unitId: unit.id,
+        currentFingerprint: unit.fingerprint,
+        boundFingerprint,
+        drift: boundFingerprint !== null && boundFingerprint !== unit.fingerprint,
+      };
+    });
   },
 };
