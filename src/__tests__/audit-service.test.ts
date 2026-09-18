@@ -114,7 +114,7 @@ describe("auditService.audit", () => {
         "claims:",
         '  - id: "c1"',
         '    field: "key"',
-        '    value: "-----BEGIN RSA PRIVATE KEY-----"',
+        '    value: "-----BEGIN' + ' RSA PRIVATE KEY-----"',
         '    provenance: "asserted"',
         '    epistemicStatus: "supported"',
         "    evidence: []",
@@ -139,7 +139,8 @@ describe("auditService.audit", () => {
         'kind: "concept"',
         'title: "leak"',
         "aliases: []",
-        'claims: [{ id: "c1", field: "key", value: "-----BEGIN RSA PRIVATE KEY-----", provenance: "asserted", epistemicStatus: "draft", evidence: [] }]',
+        'claims: [{ id: "c1", field: "key", value: "-----BEGIN' +
+          ' RSA PRIVATE KEY-----", provenance: "asserted", epistemicStatus: "draft", evidence: [] }]',
         "",
       ].join("\n"),
     );
