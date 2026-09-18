@@ -66,9 +66,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@warpgogol/forge": "*",
-    "@warpgogol/werkstatt-engine": "*",
-    "@warpgogol/werkstatt-shared": "*",
+    "@warpgogol/forge": "^5.1.0",
+    "@warpgogol/werkstatt-engine": "^1.11.0",
+    "@warpgogol/werkstatt-shared": "^0.15.0",
     "yaml": "^2.9.1",
     "zod": "^4.6.5"
   },
